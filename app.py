@@ -1,15 +1,16 @@
-import io
-import os
-from datetime import datetime
-
-import pandas as pd
 import streamlit as st
+import pandas as pd
+import os
+import io
+import zipfile
+from datetime import datetime
+from typing import List, Tuple
 from reportlab.lib.pagesizes import A4
-from reportlab.lib.utils import ImageReader
-from reportlab.pdfbase import pdfmetrics
-from reportlab.pdfbase.pdfmetrics import stringWidth
 from reportlab.pdfbase.ttfonts import TTFont
+from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfgen import canvas
+from reportlab.lib.utils import ImageReader
+from reportlab.pdfbase.pdfmetrics import stringWidth
 
 st.set_page_config(page_title="인증서 다운로드", layout="centered")
 
@@ -22,7 +23,7 @@ LOGO_PATH = os.path.join(ASSETS_DIR, "logo.png")
 STAMP_PATH = os.path.join(ASSETS_DIR, "stamp.png")
 
 
-def resolve_path(*candidates: str) -> str | None:
+def resolve_path(*candidates):
     for path in candidates:
         if path and os.path.exists(path):
             return path
@@ -43,8 +44,8 @@ def setup_fonts() -> tuple[str, str]:
 
     if not regular_path or not bold_path:
         st.error(
-            "한글 폰트를 찾지 못했습니다. "
-            "assets 폴더에 NanumGothic.ttf, NanumGothicBold.ttf 파일이 있어야 합니다."
+            "한글 폰트를 찾지 못했습니다. assets 폴더에 "
+            "NanumGothic.ttf, NanumGothicBold.ttf 파일이 있어야 합니다."
         )
         st.stop()
 
@@ -54,36 +55,12 @@ def setup_fonts() -> tuple[str, str]:
 
 
 PDF_FONT, PDF_FONT_BOLD = setup_fonts()
+
+if not os.path.exists(CSV_PATH):
+    st.error("certificates.csv 파일을 찾지 못했습니다.")
+    st.stop()
+
 df = pd.read_csv(CSV_PATH)
-
-
-def draw_wrapped_text(c, text, x, y, max_width, font_name, font_size, line_gap=14, align="left"):
-    c.setFont(font_name, font_size)
-
-    words = str(text).split(" ")
-    lines = []
-    current = ""
-
-    for word in words:
-        test_line = word if current == "" else f"{current} {word}"
-        if stringWidth(test_line, font_name, font_size) <= max_width:
-            current = test_line
-        else:
-            if current:
-                lines.append(current)
-            current = word
-
-    if current:
-        lines.append(current)
-
-    for i, line in enumerate(lines):
-        line_y = y - i * line_gap
-        if align == "center":
-            c.drawCentredString(x, line_y, line)
-        else:
-            c.drawString(x, line_y, line)
-
-    return y - max(0, len(lines) - 1) * line_gap
 
 
 def get_template_lines(product_name: str, template_type: str):
@@ -148,7 +125,33 @@ def get_template_lines(product_name: str, template_type: str):
             "",
             f"제품명: {product_name}",
         ]
+
     return title, lines
+
+
+def draw_wrapped_text(c, text, x, y, max_width, font_name, font_size, line_gap=14):
+    c.setFont(font_name, font_size)
+
+    words = str(text).split(" ")
+    lines = []
+    current = ""
+
+    for word in words:
+        test_line = word if current == "" else f"{current} {word}"
+        if stringWidth(test_line, font_name, font_size) <= max_width:
+            current = test_line
+        else:
+            if current:
+                lines.append(current)
+            current = word
+
+    if current:
+        lines.append(current)
+
+    for i, line in enumerate(lines):
+        c.drawString(x, y - i * line_gap, line)
+
+    return y - (len(lines) - 1) * line_gap
 
 
 def generate_template_pdf(product_name: str, template_type: str) -> io.BytesIO:
@@ -161,44 +164,43 @@ def generate_template_pdf(product_name: str, template_type: str) -> io.BytesIO:
 
     if os.path.exists(LOGO_PATH):
         logo = ImageReader(LOGO_PATH)
-        c.drawImage(logo, 42, height - 62, width=120, height=28, mask="auto")
+        c.drawImage(logo, 50, height - 90, width=140, height=40, mask="auto")
 
-    c.setLineWidth(0.8)
-    c.rect(22, 22, width - 44, height - 44)
-    c.line(22, height - 78, width - 22, height - 78)
+    c.setFont(PDF_FONT_BOLD, 18)
+    c.drawCentredString(width / 2, height - 120, title)
 
-    c.setFont(PDF_FONT_BOLD, 19)
-    c.drawCentredString(width / 2, height - 108, title)
+    y = height - 180
+    line_gap = 24
 
-    y = height - 158
     c.setFont(PDF_FONT, 11)
     for line in lines:
         if line == "":
             y -= 10
         else:
-            c.drawString(55, y, line)
-            y -= 23
+            c.drawString(70, y, line)
+            y -= line_gap
 
-    y -= 12
-    c.drawString(55, y, f"발행일자: {today}")
-    y -= 22
-    c.drawString(55, y, "발행처: 삼양사")
-    y -= 22
-    c.drawString(55, y, "발행부서: 식품안전팀")
+    y -= 20
+    c.setFont(PDF_FONT, 11)
+    c.drawString(70, y, f"발행일자: {today}")
+    y -= line_gap
+    c.drawString(70, y, "발행처: 삼양사")
+    y -= line_gap
+    c.drawString(70, y, "발행부서: 품질 관련 부서")
 
-    y -= 46
-    c.drawString(55, y, "상기와 같이 확인합니다.")
-    y -= 34
-    c.drawString(55, y, "주식회사 삼양사")
-    y -= 22
-    c.drawString(55, y, "식품안전팀장")
+    y -= 60
+    c.drawString(70, y, "상기와 같이 확인합니다.")
+
+    y -= 50
+    c.drawString(70, y, "삼양사")
+    c.drawString(70, y - 22, "품질책임자: __________________")
 
     if os.path.exists(STAMP_PATH):
         stamp = ImageReader(STAMP_PATH)
-        c.drawImage(stamp, 205, y - 22, width=72, height=72, mask="auto")
+        c.drawImage(stamp, 220, y - 45, width=80, height=80, mask="auto")
 
     c.setFont(PDF_FONT, 9)
-    c.drawString(55, 38, "본 문서는 시스템에서 자동 생성되었습니다.")
+    c.drawString(70, 50, "본 문서는 시스템에서 자동 생성되었습니다.")
 
     c.showPage()
     c.save()
@@ -206,17 +208,18 @@ def generate_template_pdf(product_name: str, template_type: str) -> io.BytesIO:
     return buffer
 
 
-def generate_origin_certificate_pdf(product_name: str,
-                                    main_ingredient: str = "",
-                                    origin_country: str = "") -> io.BytesIO:
+def generate_origin_certificate_pdf(
+    product_name: str,
+    main_ingredient: str = "",
+    origin_country: str = "",
+    receiver: str = "수신자제위",
+) -> io.BytesIO:
     buffer = io.BytesIO()
     c = canvas.Canvas(buffer, pagesize=A4)
     width, height = A4
     today = datetime.today().strftime("%Y-%m-%d")
 
-    page_left = 24
-    page_right = width - 24
-    body_left = 42
+    page_left = 28
 
     def draw_text(x, y, text, size=11, font=PDF_FONT):
         c.setFont(font, size)
@@ -227,64 +230,77 @@ def generate_origin_certificate_pdf(product_name: str,
         c.drawCentredString(x, y, str(text))
 
     c.setLineWidth(0.8)
-    c.rect(12, 12, width - 24, height - 24)
+    c.rect(15, 15, width - 30, height - 30)
 
     if os.path.exists(LOGO_PATH):
         logo = ImageReader(LOGO_PATH)
-        c.drawImage(logo, page_left, height - 47, width=118, height=26, mask="auto")
+        c.drawImage(logo, page_left, height - 52, width=110, height=24, mask="auto")
 
-    draw_center(width / 2, height - 34, "주식회사 삼 양 사", 21, PDF_FONT_BOLD)
+    draw_center(width / 2, height - 38, "주식회사 삼 양 사", size=21, font=PDF_FONT_BOLD)
 
-    c.line(12, height - 60, width - 12, height - 60)
+    c.line(15, height - 66, width - 15, height - 66)
     draw_center(
         width / 2,
-        height - 76,
+        height - 83,
         "우 22826 / 인천광역시 서구 백범로 726 / 전화: 032)570-8229 / 팩스: 032)570-8277",
-        9.5,
-        PDF_FONT
+        size=9.5,
+        font=PDF_FONT,
     )
 
-    info_top = height - 100
-    info_bottom = height - 198
-    c.rect(12, info_bottom, width - 24, info_top - info_bottom)
+    info_top = height - 108
+    info_bottom = height - 210
+    c.rect(15, info_bottom, width - 30, info_top - info_bottom)
 
-    row_1 = info_top - 22
-    row_2 = info_top - 50
-    row_3 = info_top - 78
-    row_4 = info_top - 106
+    row_1 = info_top - 24
+    row_2 = info_top - 52
+    row_3 = info_top - 80
+    row_4 = info_top - 108
 
-    label_x = 28
-    value_x = 102
+    label_x = 30
+    value_x = 110
 
     draw_text(label_x, row_1, "발신일자 :", 11, PDF_FONT_BOLD)
     draw_text(value_x, row_1, today, 11, PDF_FONT)
 
     draw_text(label_x, row_2, "수    신 :", 11, PDF_FONT_BOLD)
-    draw_text(value_x, row_2, "수신자 제위", 11, PDF_FONT)
+    draw_text(value_x, row_2, receiver or "수신자제위", 11, PDF_FONT)
 
     draw_text(label_x, row_3, "참    조 :", 11, PDF_FONT_BOLD)
 
     draw_text(label_x, row_4, "제    목 :", 11, PDF_FONT_BOLD)
     draw_text(value_x, row_4, "원산지 증명", 11, PDF_FONT)
 
-    body_y = info_bottom - 28
-    draw_text(body_left, body_y,
-              "1. 귀사의 일익 번창하심을 진심으로 기원하오며, 그 동안 저희 사에 베풀어",
-              11, PDF_FONT)
-    draw_text(body_left + 18, body_y - 20,
-              "주신 각별한 애호에 감사드립니다.",
-              11, PDF_FONT)
+    body_y = info_bottom - 30
+    draw_text(
+        40,
+        body_y,
+        "1. 귀사의 일익 번창하심을 진심으로 기원하오며, 그 동안 저희 사에 베풀어",
+        11,
+        PDF_FONT,
+    )
+    draw_text(
+        58,
+        body_y - 20,
+        "주신 각별한 애호에 감사 드립니다.",
+        11,
+        PDF_FONT,
+    )
 
-    draw_text(body_left, body_y - 56,
-              "2. 귀사에 납품되는 다음 제품의 원료 원산지는 아래와 같습니다.",
-              11, PDF_FONT)
+    draw_text(
+        40,
+        body_y - 58,
+        "2. 귀사에 납품되는 다음 제품의 원료 원산지는 아래와 같습니다.",
+        11,
+        PDF_FONT,
+    )
 
-    table_top = body_y - 84
-    table_bottom = table_top - 80
-    x0 = 22
-    x1 = 165
-    x2 = 335
-    x3 = width - 22
+    table_top = body_y - 88
+    table_bottom = table_top - 74
+
+    x0 = 25
+    x1 = 170
+    x2 = 340
+    x3 = width - 25
 
     c.rect(x0, table_bottom, x3 - x0, table_top - table_bottom)
     c.line(x1, table_bottom, x1, table_top)
@@ -297,39 +313,58 @@ def generate_origin_certificate_pdf(product_name: str,
     draw_center((x1 + x2) / 2, table_top - 16, "주원료", 10.5, PDF_FONT_BOLD)
     draw_center((x2 + x3) / 2, table_top - 16, "원료원산지", 10.5, PDF_FONT_BOLD)
 
+    draw_center((x0 + x1) / 2, table_bottom + 22, product_name, 14, PDF_FONT)
+    draw_center((x1 + x2) / 2, table_bottom + 22, main_ingredient or "-", 12, PDF_FONT)
+
     draw_wrapped_text(
-        c, product_name, x0 + 8, table_bottom + 34, x1 - x0 - 16, PDF_FONT, 11, 13
-    )
-    draw_wrapped_text(
-        c, main_ingredient or "-", x1 + 8, table_bottom + 34, x2 - x1 - 16, PDF_FONT, 11, 13
-    )
-    draw_wrapped_text(
-        c, origin_country or "-", x2 + 8, table_bottom + 34, x3 - x2 - 16, PDF_FONT, 10.5, 12
+        c,
+        origin_country or "-",
+        x2 + 8,
+        table_bottom + 30,
+        (x3 - x2) - 16,
+        PDF_FONT,
+        10.5,
+        line_gap=12,
     )
 
-    draw_text(body_left, table_bottom - 34,
-              "3. 향후에도 양질의 제품만을 공급해 드릴 수 있도록 최선을 다하겠습니다.",
-              11, PDF_FONT)
+    draw_text(
+        40,
+        table_bottom - 34,
+        "3. 향후에도 양질의 제품만을 공급해 드릴 수 있도록 최선을 다하겠습니다.",
+        11,
+        PDF_FONT,
+    )
 
-    draw_text(width - 86, 122, "1부. 끝.", 10.5, PDF_FONT)
+    draw_text(width - 82, 118, "1부.끝.", 10.5, PDF_FONT)
 
-    draw_center(width / 2, 92, "인천광역시 서구 백범로 726", 11, PDF_FONT)
-    draw_center(width / 2, 70, "주식회사 삼양사", 11, PDF_FONT)
-    draw_center(width / 2, 48, "식품안전팀장", 11, PDF_FONT)
+    draw_center(width / 2, 86, "인천광역시 서구 백범로 726", 11, PDF_FONT)
+    draw_center(width / 2, 64, "주식회사 삼양사", 11, PDF_FONT)
+    draw_center(width / 2, 42, "식품안전팀장", 11, PDF_FONT)
 
     if os.path.exists(STAMP_PATH):
         stamp = ImageReader(STAMP_PATH)
-        c.drawImage(stamp, width / 2 + 112, 30, width=66, height=66, mask="auto")
+        c.drawImage(stamp, width / 2 + 118, 26, width=68, height=68, mask="auto")
 
-    c.line(12, 34, width - 12, 34)
-    draw_text(28, 20, "서식3-J113Rev.0", 8.5, PDF_FONT)
-    draw_center(width / 2, 20, "㈜삼양사 인천1공장", 8.5, PDF_FONT)
-    draw_text(width - 150, 20, "A4(210mm X 297mm)", 8.5, PDF_FONT)
+    c.line(15, 35, width - 15, 35)
+    draw_text(32, 22, "서식3-J113Rev.0", 8.5, PDF_FONT)
+    draw_center(width / 2, 22, "㈜삼양사 인천1공장", 8.5, PDF_FONT)
+    draw_text(width - 158, 22, "A4(210mm X 297mm)", 8.5, PDF_FONT)
 
     c.showPage()
     c.save()
     buffer.seek(0)
     return buffer
+
+
+def build_zip_from_documents(documents: List[Tuple[str, bytes]]) -> io.BytesIO:
+    zip_buffer = io.BytesIO()
+
+    with zipfile.ZipFile(zip_buffer, "w", zipfile.ZIP_DEFLATED) as zip_file:
+        for file_name, file_bytes in documents:
+            zip_file.writestr(file_name, file_bytes)
+
+    zip_buffer.seek(0)
+    return zip_buffer
 
 
 query_params = st.query_params
@@ -343,14 +378,20 @@ if product_code:
     else:
         product_name = product_data.iloc[0]["product_name"]
         st.title(f"{product_name} 인증서 / 확인서")
+        st.write("필요한 문서를 체크한 뒤 ZIP으로 한 번에 다운로드할 수 있습니다.")
+
+        all_docs_for_zip = []
 
         for idx, row in product_data.reset_index(drop=True).iterrows():
             cert_name = str(row["cert_name"])
             doc_type = str(row["type"]).strip().lower()
             safe_cert_name = cert_name.strip().replace(" ", "_")
 
+            file_bytes = None
+            output_file_name = None
+
             if doc_type == "file":
-                file_name = row["file"]
+                file_name = row["file"] if "file" in row.index else ""
 
                 if pd.isna(file_name) or str(file_name).strip() == "":
                     st.warning(f"{cert_name}: 파일명이 비어 있습니다.")
@@ -361,13 +402,28 @@ if product_code:
 
                 if os.path.exists(file_path):
                     with open(file_path, "rb") as f:
+                        file_bytes = f.read()
+
+                    output_file_name = file_name
+
+                    col1, col2 = st.columns([4, 2])
+
+                    with col1:
+                        checked = st.checkbox(
+                            f"{cert_name} 선택",
+                            key=f"check_file_{product_code}_{safe_cert_name}_{idx}",
+                        )
+
+                    with col2:
                         st.download_button(
                             label=f"{cert_name} 다운로드",
-                            data=f.read(),
-                            file_name=file_name,
+                            data=file_bytes,
+                            file_name=output_file_name,
                             mime="application/pdf",
-                            key=f"file_{product_code}_{safe_cert_name}_{idx}"
+                            key=f"file_{product_code}_{safe_cert_name}_{idx}",
                         )
+
+                    all_docs_for_zip.append((output_file_name, file_bytes, checked))
                 else:
                     st.warning(f"{cert_name}: 파일 없음 ({file_name})")
 
@@ -383,6 +439,7 @@ if product_code:
                 if template_type == "origin":
                     main_ingredient = ""
                     origin_country = ""
+                    receiver = "수신자제위"
 
                     if "main_ingredient" in row.index and not pd.isna(row["main_ingredient"]):
                         main_ingredient = str(row["main_ingredient"]).strip()
@@ -390,23 +447,66 @@ if product_code:
                     if "origin_country" in row.index and not pd.isna(row["origin_country"]):
                         origin_country = str(row["origin_country"]).strip()
 
+                    if "receiver" in row.index and not pd.isna(row["receiver"]):
+                        receiver = str(row["receiver"]).strip()
+
                     pdf_data = generate_origin_certificate_pdf(
                         product_name=product_name,
                         main_ingredient=main_ingredient,
-                        origin_country=origin_country
+                        origin_country=origin_country,
+                        receiver=receiver,
                     )
                 else:
                     pdf_data = generate_template_pdf(product_name, template_type)
 
-                st.download_button(
-                    label=f"{cert_name} 발급",
-                    data=pdf_data.getvalue(),
-                    file_name=f"{product_name}_{cert_name}_{datetime.today().strftime('%Y%m%d')}.pdf",
-                    mime="application/pdf",
-                    key=f"template_{product_code}_{safe_cert_name}_{template_type}_{idx}"
-                )
+                file_bytes = pdf_data.getvalue()
+                output_file_name = f"{product_name}_{cert_name}_{datetime.today().strftime('%Y%m%d')}.pdf"
+
+                col1, col2 = st.columns([4, 2])
+
+                with col1:
+                    checked = st.checkbox(
+                        f"{cert_name} 선택",
+                        key=f"check_template_{product_code}_{safe_cert_name}_{template_type}_{idx}",
+                    )
+
+                with col2:
+                    st.download_button(
+                        label=f"{cert_name} 발급",
+                        data=file_bytes,
+                        file_name=output_file_name,
+                        mime="application/pdf",
+                        key=f"template_{product_code}_{safe_cert_name}_{template_type}_{idx}",
+                    )
+
+                all_docs_for_zip.append((output_file_name, file_bytes, checked))
+
             else:
                 st.warning(f"{cert_name}: type 값이 올바르지 않습니다.")
+
+        selected_docs = [
+            (file_name, file_bytes)
+            for file_name, file_bytes, checked in all_docs_for_zip
+            if checked
+        ]
+
+        if all_docs_for_zip:
+            st.divider()
+            st.subheader("선택 문서 일괄 다운로드")
+
+            if selected_docs:
+                zip_buffer = build_zip_from_documents(selected_docs)
+
+                st.download_button(
+                    label="선택한 문서 ZIP 다운로드",
+                    data=zip_buffer,
+                    file_name=f"{product_name}_certificates_{datetime.today().strftime('%Y%m%d')}.zip",
+                    mime="application/zip",
+                    key=f"zip_{product_code}",
+                )
+            else:
+                st.info("ZIP으로 받을 문서를 체크해주세요.")
+
 else:
     st.title("제품별 인증서 / 확인서")
     st.write("제품을 선택하세요.")
