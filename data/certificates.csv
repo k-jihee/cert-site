@@ -1,0 +1,130 @@
+﻿product_code,product_name,cert_name,type,template_type,file
+corn-starch,옥수수전분,HACCP 인증서,file,,HACCP_starch.pdf
+corn-starch,옥수수전분,ISO9001,file,,ISO9001.PDF
+corn-starch,옥수수전분,FSSC22000,file,,FSSC22000.pdf
+corn-starch,옥수수전분,HALAL 인증서,file,,
+corn-starch,옥수수전분,품목제조보고서,file,,
+corn-starch,옥수수전분,원산지증명서,template,origin,
+corn-starch,옥수수전분,알레르기유발물질확인서,template,allergen,
+corn-starch,옥수수전분,식물성 원재료 확인서,template,plant,
+corn-starch,옥수수전분,비동물성 원료 확인서,template,non_animal,
+corn-starch,옥수수전분,돼지고기 미사용 확인서,template,no_pork,
+corn-starch,옥수수전분,글루텐 미함유 확인서,template,gluten_free,
+corn-starch,옥수수전분,방사선비조사 확인서,template,non_irradiated,
+corn-starch,옥수수전분,멜라민 미사용 확인서,template,no_melamine,
+sun-pregel,썬프리젤,HACCP 인증서,,,HACCP_starchprocessed.pdf
+sun-pregel,썬프리젤,ISO9001,,,ISO9001.PDF
+sun-pregel,썬프리젤,FSSC22000,,,FSSC22000.pdf
+sun-pregel,썬프리젤,품목제조보고서,,,
+corn-starch,썬프리젤,원산지증명서,template,origin,
+corn-starch,썬프리젤,알레르기유발물질확인서,template,allergen,
+corn-starch,썬프리젤,식물성 원재료 확인서,template,plant,
+corn-starch,썬프리젤,비동물성 원료 확인서,template,non_animal,
+corn-starch,썬프리젤,돼지고기 미사용 확인서,template,no_pork,
+corn-starch,썬프리젤,글루텐 미함유 확인서,template,gluten_free,
+corn-starch,썬프리젤,방사선비조사 확인서,template,non_irradiated,
+corn-starch,썬프리젤,멜라민 미사용 확인서,template,no_melamine,
+sun-force20,썬포스200,HACCP 인증서,,,HACCP_oligoprocessed.pdf
+sun-force20,썬포스200,ISO9001,,,ISO9001.PDF
+sun-force20,썬포스200,FSSC22000,,,FSSC22000.pdf
+sun-force20,썬포스200,품목제조보고서,,,
+sun-force,썬포스,HACCP 인증서,,,HACCP_oligoprocessed.pdf
+sun-force,썬포스,ISO9001,,,ISO9001.PDF
+sun-force,썬포스,FSSC22000,,,FSSC22000.pdf
+sun-force,썬포스,품목제조보고서,,,
+tri-staSL,트리스타SL,HACCP 인증서,,,HACCP_starchprocessed.pdf
+tri-staSL,트리스타SL,ISO9001,,,ISO9001.PDF
+tri-staSL,트리스타SL,FSSC22000,,,FSSC22000.pdf
+tri-staSL,트리스타SL,품목제조보고서,,,
+sun-supergel,썬슈퍼젤,HACCP 인증서,,,HACCP_starchprocessed.pdf
+sun-supergel,썬슈퍼젤,ISO9001,,,ISO9001.PDF
+sun-supergel,썬슈퍼젤,FSSC22000,,,FSSC22000.pdf
+sun-supergel,썬슈퍼젤,품목제조보고서,,,
+glucose,정제포도당,HACCP 인증서,,,HACCP_glucose.pdf
+glucose,정제포도당,ISO9001,,,ISO9001.PDF
+glucose,정제포도당,FSSC22000,,,FSSC22000.pdf
+glucose,정제포도당,HALAL 인증서,,,
+glucose,정제포도당,품목제조보고서,,,
+d-monohydrate,함수결정포도당,HACCP 인증서,,,HACCP_glucose.pdf
+d-monohydrate,함수결정포도당,ISO9001,,,ISO9001.PDF
+d-monohydrate,함수결정포도당,FSSC22000,,,FSSC22000.pdf
+d-monohydrate,함수결정포도당,HALAL 인증서,,,
+d-monohydrate,함수결정포도당,품목제조보고서,,,
+d-anhydrous,무수결정포도당,HACCP 인증서,,,HACCP_glucose.pdf
+d-anhydrous,무수결정포도당,ISO9001,,,ISO9001.PDF
+d-anhydrous,무수결정포도당,FSSC22000,,,FSSC22000.pdf
+d-anhydrous,무수결정포도당,HALAL 인증서,,,
+d-anhydrous,무수결정포도당,품목제조보고서,,,
+G-60,액상포도당(G-60),HACCP 인증서,,,HACCP_glucose.pdf
+G-60,액상포도당(G-60),ISO9001,,,ISO9001.PDF
+G-60,액상포도당(G-60),FSSC22000,,,FSSC22000.pdf
+G-60,액상포도당(G-60),품목제조보고서,,,
+G-70,액상포도당(G-70),HACCP 인증서,,,HACCP_glucose.pdf
+G-70,액상포도당(G-70),ISO9001,,,ISO9001.PDF
+G-70,액상포도당(G-70),FSSC22000,,,FSSC22000.pdf
+G-70,액상포도당(G-70),품목제조보고서,,,
+fructose55,과당55,HACCP 인증서,,,HACCP_fructose.pdf
+fructose55,과당55,ISO9001,,,ISO9001.PDF
+fructose55,과당55,FSSC22000,,,FSSC22000.pdf
+fructose55,과당55,HALAL 인증서,,,
+fructose55,과당55,품목제조보고서,,,IMR_과당55.pdf
+iso-oligo,이소말토올리고당,HACCP 인증서,,,HACCP_oligo.pdf
+iso-oligo,이소말토올리고당,ISO9001,,,ISO9001.PDF
+iso-oligo,이소말토올리고당,FSSC22000,,,FSSC22000.pdf
+iso-oligo,이소말토올리고당,HALAL 인증서,,,
+iso-oligo,이소말토올리고당,품목제조보고서,,,
+oligo-powderBUP,올리고파우더BUP,HACCP 인증서,,,HACCP_oligo.pdf
+oligo-powderBUP,올리고파우더BUP,ISO9001,,,ISO9001.PDF
+oligo-powderBUP,올리고파우더BUP,FSSC22000,,,FSSC22000.pdf
+oligo-powderBUP,올리고파우더BUP,품목제조보고서,,,
+oligo-powder,올리고파우더,HACCP 인증서,,,HACCP_oligo.pdf
+oligo-powder,올리고파우더,ISO9001,,,ISO9001.PDF
+oligo-powder,올리고파우더,FSSC22000,,,FSSC22000.pdf
+oligo-powder,올리고파우더,품목제조보고서,,,
+iso-oligoM200,이소말토올리고당M200,HACCP 인증서,,,HACCP_oligo.pdf
+iso-oligoM200,이소말토올리고당M200,ISO9001,,,ISO9001.PDF
+iso-oligoM200,이소말토올리고당M200,FSSC22000,,,FSSC22000.pdf
+iso-oligoM200,이소말토올리고당M200,품목제조보고서,,,
+sun-oligo,썬올리고L500,HACCP 인증서,,,HACCP_oligo.pdf
+sun-oligo,썬올리고L500,ISO9001,,,ISO9001.PDF
+sun-oligo,썬올리고L500,FSSC22000,,,FSSC22000.pdf
+sun-oligo,썬올리고L500,품목제조보고서,,,
+malto-oligoC,말토올리고당C,HACCP 인증서,,,HACCP_oligo.pdf
+malto-oligoC,말토올리고당C,ISO9001,,,ISO9001.PDF
+malto-oligoC,말토올리고당C,FSSC22000,,,FSSC22000.pdf
+malto-oligoC,말토올리고당C,품목제조보고서,,,
+malto-oligoG4,말토올리고당G4,HACCP 인증서,,,HACCP_oligo.pdf
+malto-oligoG4,말토올리고당G4,ISO9001,,,ISO9001.PDF
+malto-oligoG4,말토올리고당G4,FSSC22000,,,FSSC22000.pdf
+malto-oligoG4,말토올리고당G4,품목제조보고서,,,
+PD,폴리덱스트로스P,ISO9001,,,ISO9001.PDF
+PD,폴리덱스트로스P,FSSC22000,,,FSSC22000.pdf
+PD,폴리덱스트로스P,품목제조보고서,,,
+low-syrup,저감미물엿,HACCP 인증서,,,HACCP_syrup.pdf
+low-syrup,저감미물엿,ISO9001,,,ISO9001.PDF
+low-syrup,저감미물엿,FSSC22000,,,FSSC22000.pdf
+low-syrup,저감미물엿,품목제조보고서,,,
+genedex,제네덱스,HACCP 인증서,,,HACCP_dextrin.pdf
+genedex,제네덱스,ISO9001,,,ISO9001.PDF
+genedex,제네덱스,FSSC22000,,,FSSC22000.pdf
+genedex,제네덱스,HALAL 인증서,,,
+genedex,제네덱스,품목제조보고서,,,IMR_제네덱스.pdf
+genedex-12,제네덱스12,HACCP 인증서,,,HACCP_dextrin.pdf
+genedex-12,제네덱스12,ISO9001,,,ISO9001.PDF
+genedex-12,제네덱스12,FSSC22000,,,FSSC22000.pdf
+genedex-12,제네덱스12,HALAL 인증서,,,
+genedex-12,제네덱스12,품목제조보고서,,,IMR_제네덱스12.pdf
+powdered-syrup,가루엿P,HACCP 인증서,,,HACCP_powdered-syrup.pdf
+powdered-syrup,가루엿P,ISO9001,,,ISO9001.PDF
+powdered-syrup,가루엿P,FSSC22000,,,FSSC22000.pdf
+powdered-syrup,가루엿P,품목제조보고서,,,
+NMD,난소화성말토덱스트린,HACCP 인증서,,,HACCP_NMD.pdf
+NMD,난소화성말토덱스트린,ISO9001,,,ISO9001.PDF
+NMD,난소화성말토덱스트린,FSSC22000,,,FSSC22000.pdf
+NMD,난소화성말토덱스트린,HALAL 인증서,,,
+NMD,난소화성말토덱스트린,품목제조보고서,,,IMR_NMD.pdf
+syrup,물엿,HACCP 인증서,,,HACCP_syrup.pdf
+syrup,물엿,ISO9001,,,ISO9001.PDF
+syrup,물엿,FSSC22000,,,FSSC22000.pdf
+syrup,물엿,HALAL 인증서,,,
+syrup,물엿,품목제조보고서,,,
