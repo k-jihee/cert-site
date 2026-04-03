@@ -62,6 +62,12 @@ if not os.path.exists(CSV_PATH):
 
 df = pd.read_csv(CSV_PATH)
 
+# 동일 문서 중복 제거
+dedupe_cols = ["product_code", "cert_name", "type", "template_type", "file"]
+existing_dedupe_cols = [col for col in dedupe_cols if col in df.columns]
+if existing_dedupe_cols:
+    df = df.drop_duplicates(subset=existing_dedupe_cols, keep="first")
+
 
 def get_template_lines(product_name: str, template_type: str):
     if template_type == "allergen":
@@ -394,7 +400,7 @@ if product_code:
                 file_name = row["file"] if "file" in row.index else ""
 
                 if pd.isna(file_name) or str(file_name).strip() == "":
-                    st.warning(f"{cert_name}: 파일명이 비어 있습니다.")
+                    st.info(f"{cert_name}: 아직 등록되지 않았습니다.")
                     continue
 
                 file_name = str(file_name).strip()
@@ -406,15 +412,20 @@ if product_code:
 
                     output_file_name = file_name
 
-                    col1, col2 = st.columns([4, 2])
+                    col1, col2, col3 = st.columns([0.55, 4.45, 2.0])
 
                     with col1:
                         checked = st.checkbox(
-                            f"{cert_name} 선택",
+                            label="",
+                            value=False,
                             key=f"check_file_{product_code}_{safe_cert_name}_{idx}",
+                            label_visibility="collapsed",
                         )
 
                     with col2:
+                        st.write(cert_name)
+
+                    with col3:
                         st.download_button(
                             label=f"{cert_name} 다운로드",
                             data=file_bytes,
@@ -433,7 +444,7 @@ if product_code:
                     template_type = str(row["template_type"]).strip().lower()
 
                 if template_type == "":
-                    st.warning(f"{cert_name}: template_type이 비어 있습니다.")
+                    st.info(f"{cert_name}: 아직 등록되지 않았습니다.")
                     continue
 
                 if template_type == "origin":
@@ -462,15 +473,20 @@ if product_code:
                 file_bytes = pdf_data.getvalue()
                 output_file_name = f"{product_name}_{cert_name}_{datetime.today().strftime('%Y%m%d')}.pdf"
 
-                col1, col2 = st.columns([4, 2])
+                col1, col2, col3 = st.columns([0.55, 4.45, 2.0])
 
                 with col1:
                     checked = st.checkbox(
-                        f"{cert_name} 선택",
+                        label="",
+                        value=False,
                         key=f"check_template_{product_code}_{safe_cert_name}_{template_type}_{idx}",
+                        label_visibility="collapsed",
                     )
 
                 with col2:
+                    st.write(cert_name)
+
+                with col3:
                     st.download_button(
                         label=f"{cert_name} 발급",
                         data=file_bytes,
