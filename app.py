@@ -21,14 +21,15 @@ STAMP_PATH = os.path.join(ASSETS_DIR, "stamp.png")
 
 df = pd.read_csv(CSV_PATH)
 
-# 한글 폰트
-FONT_PATH = "C:/Windows/Fonts/malgun.ttf"
-if os.path.exists(FONT_PATH):
-    pdfmetrics.registerFont(TTFont("Malgun", FONT_PATH))
-    PDF_FONT = "Malgun"
-else:
-    PDF_FONT = "Helvetica"
+# 한글 폰트 (assets 사용)
+FONT_REGULAR_PATH = os.path.join(ASSETS_DIR, "NanumGothic.ttf")
+FONT_BOLD_PATH = os.path.join(ASSETS_DIR, "NanumGothicBold.ttf")
 
+pdfmetrics.registerFont(TTFont("Nanum", FONT_REGULAR_PATH))
+pdfmetrics.registerFont(TTFont("Nanum-Bold", FONT_BOLD_PATH))
+
+PDF_FONT = "Nanum"
+PDF_FONT_BOLD = "Nanum-Bold"
 
 def get_template_lines(product_name: str, template_type: str):
     if template_type == "origin":
@@ -126,7 +127,7 @@ def generate_template_pdf(product_name: str, template_type: str) -> io.BytesIO:
         c.drawImage(logo, 50, height - 90, width=140, height=40, mask='auto')
 
     # 제목
-    c.setFont(PDF_FONT, 18)
+    c.setFont(PDF_FONT_BOLD, 18)
     c.drawCentredString(width / 2, height - 120, title)
 
     # 본문 시작
@@ -196,7 +197,7 @@ def generate_origin_certificate_pdf(product_name: str,
         c.drawImage(logo, 20, height - 55, width=110, height=25, mask='auto')
 
     # 회사명
-    draw_center(width / 2, height - 38, "주식회사 삼 양 사", size=20)
+    draw_center(width / 2, height - 38, "주식회사 삼 양 사", size=20, font=PDF_FONT_BOLD)
 
     # 상단 주소줄
     c.line(15, height - 68, width - 15, height - 68)
@@ -262,9 +263,9 @@ def generate_origin_certificate_pdf(product_name: str,
     header_y = table_top - 25
     c.line(x0, header_y, x3, header_y)
 
-    draw_center((x0 + x1) / 2, table_top - 17, "제품명", 11)
-    draw_center((x1 + x2) / 2, table_top - 17, "주원료", 11)
-    draw_center((x2 + x3) / 2, table_top - 17, "원료원산지", 11)
+    draw_center((x0 + x1) / 2, table_top - 17, "제품명", 11, PDF_FONT_BOLD)
+    draw_center((x1 + x2) / 2, table_top - 17, "주원료", 11, PDF_FONT_BOLD)
+    draw_center((x2 + x3) / 2, table_top - 17, "원료원산지", 11, PDF_FONT_BOLD)
 
     draw_center((x0 + x1) / 2, table_bottom + 22, product_name, 16)
     draw_center((x1 + x2) / 2, table_bottom + 22, main_ingredient or "-", 13)
