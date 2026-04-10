@@ -105,13 +105,6 @@ def get_template_lines(product_name: str, template_type: str):
             "",
             f"제품명: {product_name}",
         ]
-    elif template_type == "no_melamine":
-        title = "멜라민 미사용 확인서"
-        lines = [
-            "당사는 아래 제품의 제조과정에서 멜라민을 사용하지 않음을 확인합니다.",
-            "",
-            f"제품명: {product_name}",
-        ]
     else:
         title = "확인서"
         lines = [
