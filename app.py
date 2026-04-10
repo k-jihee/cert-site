@@ -9,7 +9,7 @@ from reportlab.lib.pagesizes import A4
 from reportlab.pdfbase.ttfonts import TTFont
 from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfgen import canvas
-from reportlab.lib.utils import ImageReader
+from reportlab.lib.utils import 
 from reportlab.pdfbase.pdfmetrics import stringWidth
 
 st.set_page_config(page_title="인증서 다운로드", layout="centered")
@@ -313,7 +313,7 @@ def generate_origin_certificate_pdf(
     draw_text(width - 85, 120, "1부.끝.", 11, PDF_FONT)
 
     # 하단 직인 및 주소 영역
-    footer_y = 115
+    footer_y = 130
     draw_center(width / 2, footer_y, "인천광역시 서구 백범로 726", 11, PDF_FONT)
     draw_center(width / 2, footer_y - 22, "주식회사 삼양사", 12, PDF_FONT_BOLD)
     draw_center(width / 2, footer_y - 44, "식품안전팀장", 11, PDF_FONT)
