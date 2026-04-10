@@ -400,7 +400,8 @@ def generate_allergen_certificate_pdf(
 
     body_y = info_bottom - 35
     draw_text(45, body_y, "1. 귀사의 일익 번창하심을 진심으로 기원하오며, 그 동안 저희 사에 베풀어 주신 각별한 애호에 감사드립니다.", 11, PDF_FONT)
-    draw_text(45, body_y - 50, "2. 우리사에서 제조하는 ({product_name}) 제품은 알레르기 유발 물질을 함유하고 있지 않으며 교차오염 위험이 없음을 알려드립니다.", 11, PDF_FONT)
+    draw_text(45, body_y - 50, "2. 우리사에서 제조하는 ({product_name}) 제품은 알레르기 유발 물질을 함유하고 있지 않으며 교차오염", 11, PDF_FONT)
+    draw_text(58, body_y - 70, "위험이 없음을 알려드립니다.", 11,PDF_FONT)
     draw_text(45, body_y - 115, "3. 향후에도 당사는 제품 안전 및 품질관리에 최선을 다하겠습니다.", 11, PDF_FONT)
     draw_text(width - 85, 120, "1부.끝.", 11, PDF_FONT)
 
