@@ -251,8 +251,8 @@ def generate_origin_certificate_pdf(
         c.drawImage(logo, 30, height - 55, width=110, height=24, mask="auto")
 
     # 회사명 상하중앙 정렬(15~70 사이 정중앙)
-    draw_center(width / 2, (header_top + header_line)/2) - 8, "주식회사 삼 양 사", size=22, font=PDF_FONT_BOLD)
-    c.line(15,  header_line, width - 15,  header_line)
+    draw_center(width / 2, (header_top + header_line)/2 - 8, "주식회사 삼 양 사", size=22, font=PDF_FONT_BOLD)
+    c.line(15, header_line, width - 15, header_line)
 
     # 주소 영역 상하중앙 정렬
     address_line = height - 95
