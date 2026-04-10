@@ -271,7 +271,7 @@ def generate_origin_certificate_pdf(
     row_gap = 26
 
     center_y = (info_top + info_bottom) / 2
-    offset = 6
+    offset = 10
     start_y = center_y + (row_gap * (num_rows - 1) / 2)
     
     draw_text(35, start_y, "발신일자 :", 11, PDF_FONT_BOLD)
