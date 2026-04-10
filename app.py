@@ -520,7 +520,7 @@ def generate_origin_certificate_pdf(
     )
 
     draw_text(c, 45, table_bottom - 40, "3. 향후에도 양질의 제품만을 공급해 드릴 수 있도록 최선을 다하겠습니다.", 11, PDF_FONT)
-    draw_text(c, width - 85, 120, "1부.끝.", 11, PDF_FONT)
+    draw_text(c, width - 85, 300, "1부.끝.", 11, PDF_FONT)
 
     footer_y = 115
     draw_center(c, width / 2, footer_y, "인천광역시 서구 백범로 726", 11, PDF_FONT)
