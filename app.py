@@ -400,28 +400,8 @@ def generate_allergen_certificate_pdf(
 
     body_y = info_bottom - 35
     draw_text(45, body_y, "1. 귀사의 일익 번창하심을 진심으로 기원하오며, 그 동안 저희 사에 베풀어 주신 각별한 애호에 감사드립니다.", 11, PDF_FONT)
-    draw_text(45, body_y - 50, "2. 귀사에 납품되는 다음 제품의 알레르기 유발물질 관리사항은 아래와 같습니다.", 11, PDF_FONT)
-
-    # 표
-    table_top = body_y - 85
-    table_height = 85
-    table_bottom = table_top - table_height
-    x0, x1, x2 = 25, 250, width - 25
-
-    c.rect(x0, table_bottom, x2 - x0, table_top - table_bottom)
-    c.line(x1, table_bottom, x1, table_top)
-
-    header_h = 28
-    c.line(x0, table_top - header_h, x2, table_top - header_h)
-
-    draw_center((x0 + x1) / 2, table_top - 15, "제품명", 12, PDF_FONT_BOLD)
-    draw_center((x1 + x2) / 2, table_top - 15, "알레르기 유발물질", 12, PDF_FONT_BOLD)
-
-    content_mid_y = table_bottom + (table_height - header_h) / 2 - 4
-    draw_center((x0 + x1) / 2, content_mid_y, product_name, 12, PDF_FONT)
-    draw_center((x1 + x2) / 2, content_mid_y, "해당없음", 11, PDF_FONT)
-
-    draw_text(45, table_bottom - 35, "3. 향후에도 당사는 제품 안전 및 품질관리에 최선을 다하겠습니다.", 11, PDF_FONT)
+    draw_text(45, body_y - 50, "2. 우리사에서 제조하는 ({product_name}) 제품은 알레르기 유발 물질을 함유하고 있지 않으며 교차오염 위험이 없음을 알려드립니다.", 11, PDF_FONT)
+    draw_text(45, body_y - 115, "3. 향후에도 당사는 제품 안전 및 품질관리에 최선을 다하겠습니다.", 11, PDF_FONT)
     draw_text(width - 85, 120, "1부.끝.", 11, PDF_FONT)
 
     footer_y = 115
