@@ -396,7 +396,7 @@ def generate_allergen_certificate_pdf(
     draw_text(35, start_y - row_gap*2, "참    조 :", font_size, PDF_FONT_BOLD)
 
     draw_text(35, start_y - row_gap*3, "제    목 :", font_size, PDF_FONT_BOLD)
-    draw_text(100, start_y - row_gap*3, "알레르기 유발물질 확인", font_size, PDF_FONT)
+    draw_text(100, start_y - row_gap*3, "알레르기 유발물질 함유 관련 件", font_size, PDF_FONT)
 
     body_y = info_bottom - 35
     draw_text(45, body_y, "1. 귀사의 일익 번창하심을 진심으로 기원하오며, 그 동안 저희 사에 베풀어 주신 각별한 애호에 감사드립니다.", 11, PDF_FONT)
