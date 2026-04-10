@@ -12,236 +12,432 @@ from reportlab.pdfgen import canvas
 from reportlab.lib.utils import ImageReader
 from reportlab.pdfbase.pdfmetrics import stringWidth
 
-st.set_page_config(page_title="인증서 시스템", layout="centered")
+st.set_page_config(page_title="인증서 다운로드", layout="centered")
 
-# --- 경로 및 설정 ---
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 CSV_PATH = os.path.join(BASE_DIR, "data", "certificates.csv")
 FILES_DIR = os.path.join(BASE_DIR, "files")
 ASSETS_DIR = os.path.join(BASE_DIR, "assets")
+
 LOGO_PATH = os.path.join(ASSETS_DIR, "logo.png")
 STAMP_PATH = os.path.join(ASSETS_DIR, "stamp.png")
 
+
 def resolve_path(*candidates):
     for path in candidates:
-        if path and os.path.exists(path): return path
+        if path and os.path.exists(path):
+            return path
     return None
 
-def setup_fonts():
-    reg = resolve_path(os.path.join(ASSETS_DIR, "NanumGothic.ttf"), "/mnt/data/NanumGothic.ttf")
-    bold = resolve_path(os.path.join(ASSETS_DIR, "NanumGothicBold.ttf"), "/mnt/data/NanumGothicBold.ttf")
-    if not reg or not bold:
-        st.error("폰트 파일을 찾을 수 없습니다.")
+
+def setup_fonts() -> tuple[str, str]:
+    regular_path = resolve_path(
+        os.path.join(ASSETS_DIR, "NanumGothic.ttf"),
+        os.path.join(BASE_DIR, "NanumGothic.ttf"),
+        "/mnt/data/NanumGothic.ttf",
+    )
+    bold_path = resolve_path(
+        os.path.join(ASSETS_DIR, "NanumGothicBold.ttf"),
+        os.path.join(BASE_DIR, "NanumGothicBold.ttf"),
+        "/mnt/data/NanumGothicBold.ttf",
+    )
+
+    if not regular_path or not bold_path:
+        st.error(
+            "한글 폰트를 찾지 못했습니다. assets 폴더에 "
+            "NanumGothic.ttf, NanumGothicBold.ttf 파일이 있어야 합니다."
+        )
         st.stop()
-    pdfmetrics.registerFont(TTFont("Nanum", reg))
-    pdfmetrics.registerFont(TTFont("Nanum-Bold", bold))
+
+    pdfmetrics.registerFont(TTFont("Nanum", regular_path))
+    pdfmetrics.registerFont(TTFont("Nanum-Bold", bold_path))
     return "Nanum", "Nanum-Bold"
+
 
 PDF_FONT, PDF_FONT_BOLD = setup_fonts()
 
-# --- 데이터 로드 ---
 if not os.path.exists(CSV_PATH):
-    st.error("CSV 파일을 찾을 수 없습니다.")
+    st.error("certificates.csv 파일을 찾지 못했습니다.")
     st.stop()
 
 df = pd.read_csv(CSV_PATH)
+
+# 공백 제거 및 기본 정제
 if "cert_name" in df.columns:
     df["cert_name"] = df["cert_name"].str.strip()
 
-# --- 공통 함수 ---
+# 동일 문서 중복 제거 (기본)
+dedupe_cols = ["product_code", "cert_name", "type", "template_type", "file"]
+existing_dedupe_cols = [col for col in dedupe_cols if col in df.columns]
+if existing_dedupe_cols:
+    df = df.drop_duplicates(subset=existing_dedupe_cols, keep="first")
+
+
+def get_template_lines(product_name: str, template_type: str):
+    if template_type == "allergen":
+        title = "알레르기유발물질 확인서"
+        lines = [
+            "당사는 아래 제품에 대하여 원재료 및 제조공정 검토 결과를 바탕으로",
+            "알레르기유발물질 관리사항을 확인하였음을 증명합니다.",
+            "",
+            f"제품명: {product_name}",
+            "세부 사항은 당사 원재료 사양 및 제조공정 관리기준에 따릅니다.",
+        ]
+    elif template_type == "plant":
+        title = "식물성 원재료 확인서"
+        lines = [
+            "당사는 아래 제품의 원재료가 식물성 원재료 기준에 따라 검토되었음을 확인합니다.",
+            "",
+            f"제품명: {product_name}",
+            "본 확인은 당사 원재료 구성 정보에 근거합니다.",
+        ]
+    elif template_type == "non_animal":
+        title = "비동물성 원료 확인서"
+        lines = [
+            "당사는 아래 제품이 동물성 유래 원료를 사용하지 않은 기준으로 검토되었음을 확인합니다.",
+            "",
+            f"제품명: {product_name}",
+            "본 확인은 당사 원재료 구성 및 제조공정 정보에 근거합니다.",
+        ]
+    elif template_type == "no_pork":
+        title = "돼지고기 미사용 확인서"
+        lines = [
+            "당사는 아래 제품의 제조에 돼지고기 및 돼지고기 유래 원료를 사용하지 않음을 확인합니다.",
+            "",
+            f"제품명: {product_name}",
+        ]
+    elif template_type == "gluten_free":
+        title = "글루텐 미함유 확인서"
+        lines = [
+            "당사는 아래 제품에 대하여 원재료 및 제조공정 검토 결과를 바탕으로",
+            "글루텐 미함유 기준에 따라 확인하였음을 증명합니다.",
+            "",
+            f"제품명: {product_name}",
+        ]
+    elif template_type == "non_irradiated":
+        title = "방사선 비조사 확인서"
+        lines = [
+            "당사는 아래 제품이 방사선 조사 처리되지 않았음을 확인합니다.",
+            "",
+            f"제품명: {product_name}",
+        ]
+    elif template_type == "no_melamine":
+        title = "멜라민 미사용 확인서"
+        lines = [
+            "당사는 아래 제품의 제조과정에서 멜라민을 사용하지 않음을 확인합니다.",
+            "",
+            f"제품명: {product_name}",
+        ]
+    else:
+        title = "확인서"
+        lines = [
+            "당사는 아래 제품에 대한 확인서를 발행합니다.",
+            "",
+            f"제품명: {product_name}",
+        ]
+
+    return title, lines
+
+
 def draw_wrapped_centered_text(c, text, center_x, start_y, max_width, font_name, font_size, line_gap=14):
+    """텍스트를 줄바꿈하여 지정된 x축 중앙에 맞춰 그리는 함수"""
     c.setFont(font_name, font_size)
     words = str(text).split(" ")
-    lines, current = [], ""
+    lines = []
+    current = ""
+
     for word in words:
-        test = word if current == "" else f"{current} {word}"
-        if stringWidth(test, font_name, font_size) <= max_width: current = test
+        test_line = word if current == "" else f"{current} {word}"
+        if stringWidth(test_line, font_name, font_size) <= max_width:
+            current = test_line
         else:
-            if current: lines.append(current)
+            if current:
+                lines.append(current)
             current = word
-    if current: lines.append(current)
-    y_offset = start_y + ((len(lines) - 1) * line_gap / 2)
+    if current:
+        lines.append(current)
+
+    # 전체 텍스트 높이를 고려하여 시작 Y 위치 보정 (수직 중앙 정렬용)
+    total_height = (len(lines) - 1) * line_gap
+    y_offset = start_y + (total_height / 2)
+
     for i, line in enumerate(lines):
         c.drawCentredString(center_x, y_offset - (i * line_gap), line)
 
-def get_template_lines(product_name, t_type):
-    templates = {
-        "allergen": ("알레르기유발물질 확인서", ["당사는 아래 제품에 대하여 원재료 및 제조공정 검토 결과를 바탕으로", "알레르기유발물질 관리사항을 확인하였음을 증명합니다.", "", f"제품명: {product_name}"]),
-        "plant": ("식물성 원재료 확인서", ["당사는 아래 제품의 원재료가 식물성 원재료 기준에 따라 검토되었음을 확인합니다.", "", f"제품명: {product_name}"]),
-        "non_animal": ("비동물성 원료 확인서", ["당사는 아래 제품이 동물성 유래 원료를 사용하지 않은 기준으로 검토되었음을 확인합니다.", "", f"제품명: {product_name}"]),
-        "no_pork": ("돼지고기 미사용 확인서", ["당사는 아래 제품의 제조에 돼지고기 및 돼지고기 유래 원료를 사용하지 않음을 확인합니다.", "", f"제품명: {product_name}"]),
-    }
-    return templates.get(t_type, ("확인서", [f"제품명: {product_name}", "상기 제품에 대한 확인서를 발행합니다."]))
 
-# --- PDF 생성 함수 (일반 템플릿) ---
-def generate_template_pdf(product_name, t_type):
+def generate_template_pdf(product_name: str, template_type: str) -> io.BytesIO:
     buffer = io.BytesIO()
     c = canvas.Canvas(buffer, pagesize=A4)
-    w, h = A4
-    title, lines = get_template_lines(product_name, t_type)
-    if os.path.exists(LOGO_PATH): c.drawImage(ImageReader(LOGO_PATH), 50, h-90, 140, 40, mask='auto')
-    c.setFont(PDF_FONT_BOLD, 18); c.drawCentredString(w/2, h-120, title)
-    y = h-180
-    c.setFont(PDF_FONT, 11)
-    for l in lines:
-        if l == "": y -= 10
-        else: c.drawString(70, y, l); y -= 24
-    y -= 50; c.drawString(70, y, "삼양사"); c.drawString(70, y-22, "품질책임자: __________________")
-    if os.path.exists(STAMP_PATH): c.drawImage(ImageReader(STAMP_PATH), 220, y-45, 80, 80, mask='auto')
-    c.showPage(); c.save(); buffer.seek(0)
-    return buffer
-
-# --- PDF 생성 함수 (원산지 증명서 - 요청대로 수정된 버전) ---
-def generate_origin_certificate_pdf(product_name, main_ing, origin, receiver="수신자제위"):
-    buffer = io.BytesIO()
-    c = canvas.Canvas(buffer, pagesize=A4)
-    w, h = A4
+    width, height = A4
     today = datetime.today().strftime("%Y-%m-%d")
 
-    # 테두리
-    c.setLineWidth(0.8); c.rect(15, 15, w-30, h-30)
+    title, lines = get_template_lines(product_name, template_type)
 
-    # 1. 상단 회사명 영역 (상하좌우 정중앙)
-    header_top, header_line = h-15, h-70
     if os.path.exists(LOGO_PATH):
-        c.drawImage(ImageReader(LOGO_PATH), 30, h-55, 110, 24, mask='auto')
-    c.setFont(PDF_FONT_BOLD, 22)
-    c.drawCentredString(w/2, (header_top + header_line)/2 - 8, "주식회사 삼 양 사")
-    c.line(15, header_line, w-15, header_line)
+        logo = ImageReader(LOGO_PATH)
+        c.drawImage(logo, 50, height - 90, width=140, height=40, mask="auto")
 
-    # 2. 주소 영역 (상하좌우 정중앙)
-    addr_line = h-95
-    c.setFont(PDF_FONT, 9.5)
-    c.drawCentredString(w/2, (header_line + addr_line)/2 - 3, "우 22826 / 인천광역시 서구 백범로 726 / 전화: 032)570-8229 / 팩스: 032)570-8277")
-    c.line(15, addr_line, w-15, addr_line)
+    c.setFont(PDF_FONT_BOLD, 18)
+    c.drawCentredString(width / 2, height - 120, title)
 
-    # 3. 정보 박스
-    info_top = addr_line - 15
-    info_h = 115
-    info_bot = info_top - info_h
-    c.rect(15, info_bot, w-30, info_h)
+    y = height - 180
+    line_gap = 24
 
-    row_y = info_top - 25
-    gap = 26
-    c.setFont(PDF_FONT_BOLD, 11); c.drawString(35, row_y, "발신일자 :"); c.setFont(PDF_FONT, 11); c.drawString(115, row_y, today)
-    row_y -= gap
-    c.setFont(PDF_FONT_BOLD, 11); c.drawString(35, row_y, "수    신 :"); c.setFont(PDF_FONT, 11); c.drawString(115, row_y, receiver)
-    row_y -= gap
-    c.setFont(PDF_FONT_BOLD, 11); c.drawString(35, row_y, "참    조 :")
-    row_y -= gap
-    # 제목 선 겹침 방지: 글자 쓰고 선은 사각형 외곽선으로 대체됨
-    c.setFont(PDF_FONT_BOLD, 11); c.drawString(35, row_y, "제    목 :"); c.setFont(PDF_FONT, 11); c.drawString(115, row_y, "원산지 증명")
-
-    # 4. 본문
-    body_y = info_bot - 35
     c.setFont(PDF_FONT, 11)
-    c.drawString(45, body_y, "1. 귀사의 일익 번창하심을 진심으로 기원하오며, 그 동안 저희 사에 베풀어")
-    c.drawString(63, body_y - 16, "주신 각별한 애호에 감사 드립니다.") # 간격 좁힘
-    c.drawString(45, body_y - 55, "2. 귀사에 납품되는 다음 제품의 원료 원산지는 아래와 같습니다.")
+    for line in lines:
+        if line == "":
+            y -= 10
+        else:
+            c.drawString(70, y, line)
+            y -= line_gap
 
-    # 5. 테이블 (상하좌우 정중앙)
-    t_top = body_y - 85
-    t_h = 85
-    t_bot = t_top - t_h
-    x0, x1, x2, x3 = 25, 170, 340, w-25
-    c.rect(x0, t_bot, x3-x0, t_h)
-    c.line(x1, t_bot, x1, t_top); c.line(x2, t_bot, x2, t_top)
-    h_h = 28
-    c.line(x0, t_top-h_h, x3, t_top-h_h)
-    
-    c.setFont(PDF_FONT_BOLD, 11)
-    c.drawCentredString((x0+x1)/2, t_top-18, "제품명")
-    c.drawCentredString((x1+x2)/2, t_top-18, "주원료")
-    c.drawCentredString((x2+x3)/2, t_top-18, "원료원산지")
-
-    mid_y = t_bot + (t_h - h_h)/2 - 4
-    c.setFont(PDF_FONT, 12); c.drawCentredString((x0+x1)/2, mid_y, product_name)
-    c.setFont(PDF_FONT, 11); c.drawCentredString((x1+x2)/2, mid_y, str(main_ing))
-    draw_wrapped_centered_text(c, origin, (x2+x3)/2, mid_y+2, (x3-x2)-15, PDF_FONT, 10)
-
-    # 6. 하단부
+    y -= 20
     c.setFont(PDF_FONT, 11)
-    c.drawString(45, t_bot - 35, "3. 향후에도 양질의 제품만을 공급해 드릴 수 있도록 최선을 다하겠습니다.")
-    c.drawRightString(w-45, 120, "1부.끝.")
+    c.drawString(70, y, f"발행일자: {today}")
+    y -= line_gap
+    c.drawString(70, y, "발행처: 삼양사")
+    y -= line_gap
+    c.drawString(70, y, "발행부서: 품질 관련 부서")
 
-    f_y = 95
-    c.drawCentredString(w/2, f_y, "인천광역시 서구 백범로 726")
-    c.setFont(PDF_FONT_BOLD, 13); c.drawCentredString(w/2, f_y-22, "주식회사 삼양사")
-    c.setFont(PDF_FONT, 11); c.drawCentredString(w/2, f_y-44, "식품안전팀장")
-    if os.path.exists(STAMP_PATH): c.drawImage(ImageReader(STAMP_PATH), w/2+75, f_y-65, 70, 70, mask='auto')
+    y -= 60
+    c.drawString(70, y, "상기와 같이 확인합니다.")
 
-    c.line(15, 35, w-15, 35)
-    c.setFont(PDF_FONT, 8.5)
-    c.drawString(35, 22, "서식3-J113Rev.0"); c.drawCentredString(w/2, 22, "㈜삼양사 인천1공장"); c.drawRightString(w-35, 22, "A4(210mm X 297mm)")
-    
-    c.showPage(); c.save(); buffer.seek(0)
+    y -= 50
+    c.drawString(70, y, "삼양사")
+    c.drawString(70, y - 22, "품질책임자: __________________")
+
+    if os.path.exists(STAMP_PATH):
+        stamp = ImageReader(STAMP_PATH)
+        c.drawImage(stamp, 220, y - 45, width=80, height=80, mask="auto")
+
+    c.setFont(PDF_FONT, 9)
+    c.drawString(70, 50, "본 문서는 시스템에서 자동 생성되었습니다.")
+
+    c.showPage()
+    c.save()
+    buffer.seek(0)
     return buffer
 
-def build_zip(docs):
-    buf = io.BytesIO()
-    with zipfile.ZipFile(buf, "w", zipfile.ZIP_DEFLATED) as f:
-        for name, data in docs: f.writestr(name, data)
-    buf.seek(0)
-    return buf
 
-# --- UI 메인 로직 ---
-p_code = st.query_params.get("product")
+def generate_origin_certificate_pdf(
+    product_name: str,
+    main_ingredient: str = "",
+    origin_country: str = "",
+    receiver: str = "수신자제위",
+) -> io.BytesIO:
+    buffer = io.BytesIO()
+    c = canvas.Canvas(buffer, pagesize=A4)
+    width, height = A4
+    today = datetime.today().strftime("%Y-%m-%d")
 
-if p_code:
-    p_data = df[df["product_code"] == p_code].copy()
-    if len(p_data) == 0: st.error("제품을 찾을 수 없습니다.")
+    page_left = 28
+
+    def draw_text(x, y, text, size=11, font=PDF_FONT):
+        c.setFont(font, size)
+        c.drawString(x, y, str(text))
+
+    def draw_center(x, y, text, size=11, font=PDF_FONT):
+        c.setFont(font, size)
+        c.drawCentredString(x, y, str(text))
+
+    c.setLineWidth(0.8)
+    c.rect(15, 15, width - 30, height - 30)
+
+    if os.path.exists(LOGO_PATH):
+        logo = ImageReader(LOGO_PATH)
+        c.drawImage(logo, page_left, height - 52, width=110, height=24, mask="auto")
+
+    draw_center(width / 2, height - 38, "주식회사 삼 양 사", size=21, font=PDF_FONT_BOLD)
+
+    c.line(15, height - 66, width - 15, height - 66)
+    draw_center(
+        width / 2,
+        height - 83,
+        "우 22826 / 인천광역시 서구 백범로 726 / 전화: 032)570-8229 / 팩스: 032)570-8277",
+        size=9.5,
+        font=PDF_FONT,
+    )
+
+    info_top = height - 108
+    info_bottom = height - 210
+    c.rect(15, info_bottom, width - 30, info_top - info_bottom)
+
+    row_1 = info_top - 24
+    row_2 = info_top - 52
+    row_4 = info_top - 108
+
+    label_x = 30
+    value_x = 110
+
+    draw_text(label_x, row_1, "발신일자 :", 11, PDF_FONT_BOLD)
+    draw_text(value_x, row_1, today, 11, PDF_FONT)
+    draw_text(label_x, row_2, "수    신 :", 11, PDF_FONT_BOLD)
+    draw_text(value_x, row_2, receiver or "수신자제위", 11, PDF_FONT)
+    draw_text(label_x, info_top - 80, "참    조 :", 11, PDF_FONT_BOLD)
+    draw_text(label_x, row_4, "제    목 :", 11, PDF_FONT_BOLD)
+    draw_text(value_x, row_4, "원산지 증명", 11, PDF_FONT)
+
+    body_y = info_bottom - 30
+    draw_text(40, body_y, "1. 귀사의 일익 번창하심을 진심으로 기원하오며, 그 동안 저희 사에 베풀어", 11, PDF_FONT)
+    draw_text(58, body_y - 20, "주신 각별한 애호에 감사 드립니다.", 11, PDF_FONT)
+    draw_text(40, body_y - 58, "2. 귀사에 납품되는 다음 제품의 원료 원산지는 아래와 같습니다.", 11, PDF_FONT)
+
+    # 테이블 설정
+    table_top = body_y - 88
+    table_height = 80  # 칸 높이를 약간 더 키움
+    table_bottom = table_top - table_height
+
+    x0, x1, x2, x3 = 25, 170, 340, width - 25
+
+    c.rect(x0, table_bottom, x3 - x0, table_top - table_bottom)
+    c.line(x1, table_bottom, x1, table_top)
+    c.line(x2, table_bottom, x2, table_top)
+
+    header_height = 24
+    content_y_mid = table_bottom + (table_height - header_height) / 2
+    c.line(x0, table_top - header_height, x3, table_top - header_height)
+
+    # 헤더 텍스트
+    draw_center((x0 + x1) / 2, table_top - 16, "제품명", 10.5, PDF_FONT_BOLD)
+    draw_center((x1 + x2) / 2, table_top - 16, "주원료", 10.5, PDF_FONT_BOLD)
+    draw_center((x2 + x3) / 2, table_top - 16, "원료원산지", 10.5, PDF_FONT_BOLD)
+
+    # 내용 텍스트 (정중앙 배치)
+    draw_center((x0 + x1) / 2, content_y_mid - 4, product_name, 12, PDF_FONT)
+    draw_center((x1 + x2) / 2, content_y_mid - 4, main_ingredient or "-", 11, PDF_FONT)
+
+    # 원료원산지 줄바꿈 및 중앙 정렬 적용
+    draw_wrapped_centered_text(
+        c,
+        origin_country or "-",
+        (x2 + x3) / 2,
+        content_y_mid - 2,
+        (x3 - x2) - 10,
+        PDF_FONT,
+        10,
+        line_gap=13
+    )
+
+    draw_text(40, table_bottom - 34, "3. 향후에도 양질의 제품만을 공급해 드릴 수 있도록 최선을 다하겠습니다.", 11, PDF_FONT)
+    draw_text(width - 82, 118, "1부.끝.", 10.5, PDF_FONT)
+
+    # 하단 직인 및 주소 영역
+    footer_y = 90
+    draw_center(width / 2, footer_y, "인천광역시 서구 백범로 726", 11, PDF_FONT)
+    draw_center(width / 2, footer_y - 22, "주식회사 삼양사", 12, PDF_FONT_BOLD)
+    draw_center(width / 2, footer_y - 44, "식품안전팀장", 11, PDF_FONT)
+
+    if os.path.exists(STAMP_PATH):
+        stamp = ImageReader(STAMP_PATH)
+        c.drawImage(stamp, width / 2 + 80, footer_y - 65, width=70, height=70, mask="auto")
+
+    c.line(15, 35, width - 15, 35)
+    draw_text(32, 22, "서식3-J113Rev.0", 8.5, PDF_FONT)
+    draw_center(width / 2, 22, "㈜삼양사 인천1공장", 8.5, PDF_FONT)
+    draw_text(width - 158, 22, "A4(210mm X 297mm)", 8.5, PDF_FONT)
+
+    c.showPage()
+    c.save()
+    buffer.seek(0)
+    return buffer
+
+
+def build_zip_from_documents(documents: List[Tuple[str, bytes]]) -> io.BytesIO:
+    zip_buffer = io.BytesIO()
+    with zipfile.ZipFile(zip_buffer, "w", zipfile.ZIP_DEFLATED) as zip_file:
+        for file_name, file_bytes in documents:
+            zip_file.writestr(file_name, file_bytes)
+    zip_buffer.seek(0)
+    return zip_buffer
+
+
+query_params = st.query_params
+product_code = query_params.get("product")
+
+if product_code:
+    product_data = df[df["product_code"] == product_code].copy()
+
+    if len(product_data) == 0:
+        st.error("해당 제품을 찾을 수 없습니다.")
     else:
-        # 중복 제거 및 정렬
-        p_data['has_val'] = p_data['file'].notna() | p_data['template_type'].notna()
-        p_data = p_data.sort_values('has_val', ascending=False).drop_duplicates('cert_name')
-        
-        p_name = p_data.iloc[0]["product_name"]
-        st.title(f"📄 {p_name} 인증서 관리")
-        
-        zip_list = []
-        for idx, row in p_data.reset_index(drop=True).iterrows():
-            c_name = row["cert_name"]
-            d_type = str(row["type"]).lower().strip()
-            
-            col1, col2, col3 = st.columns([0.5, 3.5, 1.2])
-            f_bytes, f_name = None, ""
+        # 중복 방지: 내용이 있는 행 우선 정렬 후 이름 기준 중복 제거
+        product_data['has_content'] = product_data['file'].notna() | product_data['template_type'].notna()
+        product_data = product_data.sort_values(by='has_content', ascending=False)
+        product_data = product_data.drop_duplicates(subset=['cert_name'], keep='first')
 
-            # 케이스 1: 등록된 파일 다운로드
-            if d_type == "file":
-                fname = str(row.get("file", ""))
-                fpath = os.path.join(FILES_DIR, fname)
-                if os.path.exists(fpath):
-                    with open(fpath, "rb") as f: f_bytes = f.read()
-                    f_name = fname
-                else: 
-                    with col2: st.caption(f"⚠️ {c_name} (파일 없음)")
+        product_name = product_data.iloc[0]["product_name"]
+        st.title(f"{product_name} 인증서 / 확인서")
+        st.write("필요한 문서를 체크한 뒤 ZIP으로 한 번에 다운로드할 수 있습니다.")
+
+        all_docs_for_zip = []
+
+        for idx, row in product_data.reset_index(drop=True).iterrows():
+            cert_name = str(row["cert_name"])
+            doc_type = str(row["type"]).strip().lower()
+            safe_cert_name = cert_name.strip().replace(" ", "_")
+            file_bytes, output_file_name = None, None
+
+            # 레이아웃 간격 고정
+            col1, col2, col3 = st.columns([0.5, 3.5, 1.0])
+
+            if doc_type == "file":
+                file_name = str(row.get("file", "")).strip()
+                if pd.isna(row.get("file")) or not file_name:
+                    st.info(f"{cert_name}: 아직 등록되지 않았습니다.")
                     continue
 
-            # 케이스 2: 템플릿 생성
-            elif d_type == "template":
-                t_type = str(row.get("template_type", "")).lower()
-                if t_type == "origin":
-                    pdf = generate_origin_certificate_pdf(p_name, row.get("main_ingredient","-"), row.get("origin_country","-"))
+                file_path = os.path.join(FILES_DIR, file_name)
+                if os.path.exists(file_path):
+                    with open(file_path, "rb") as f:
+                        file_bytes = f.read()
+                    output_file_name = file_name
+
+                    with col1:
+                        checked = st.checkbox(label="", value=False, key=f"c_f_{product_code}_{idx}", label_visibility="collapsed")
+                    with col2:
+                        st.write(cert_name)
+                    with col3:
+                        st.download_button(label="다운로드", data=file_bytes, file_name=output_file_name, mime="application/pdf", key=f"f_{product_code}_{idx}")
+                    all_docs_for_zip.append((output_file_name, file_bytes, checked))
                 else:
-                    pdf = generate_template_pdf(p_name, t_type)
-                f_bytes = pdf.getvalue()
-                f_name = f"{p_name}_{c_name}.pdf"
+                    st.warning(f"{cert_name}: 파일 없음")
 
-            if f_bytes:
-                with col1: chk = st.checkbox("", key=f"chk_{idx}")
-                with col2: st.write(c_name)
-                with col3: st.download_button("다운로드", f_bytes, f_name, "application/pdf", key=f"dl_{idx}")
-                zip_list.append((f_name, f_bytes, chk))
+            elif doc_type == "template":
+                template_type = str(row.get("template_type", "")).strip().lower()
+                if not template_type or pd.isna(row.get("template_type")):
+                    st.info(f"{cert_name}: 아직 등록되지 않았습니다.")
+                    continue
 
-        if zip_list:
+                if template_type == "origin":
+                    pdf_data = generate_origin_certificate_pdf(
+                        product_name=product_name,
+                        main_ingredient=str(row.get("main_ingredient", "-")),
+                        origin_country=str(row.get("origin_country", "-")),
+                        receiver=str(row.get("receiver", "수신자제위"))
+                    )
+                else:
+                    pdf_data = generate_template_pdf(product_name, template_type)
+
+                file_bytes = pdf_data.getvalue()
+                output_file_name = f"{product_name}_{cert_name}_{datetime.today().strftime('%Y%m%d')}.pdf"
+
+                with col1:
+                    checked = st.checkbox(label="", value=False, key=f"c_t_{product_code}_{idx}", label_visibility="collapsed")
+                with col2:
+                    st.write(cert_name)
+                with col3:
+                    st.download_button(label="다운로드", data=file_bytes, file_name=output_file_name, mime="application/pdf", key=f"t_{product_code}_{idx}")
+                all_docs_for_zip.append((output_file_name, file_bytes, checked))
+
+        if all_docs_for_zip:
             st.divider()
-            selected = [(n, b) for n, b, c in zip_list if c]
-            if selected:
-                st.download_button("선택 문서 ZIP 다운로드", build_zip(selected), f"{p_name}_인증서.zip", "application/zip")
+            selected_docs = [(f, b) for f, b, c in all_docs_for_zip if c]
+            if selected_docs:
+                st.download_button(label="선택한 문서 ZIP 다운로드", data=build_zip_from_documents(selected_docs), file_name=f"{product_name}_docs.zip", mime="application/zip")
             else:
-                st.info("ZIP으로 다운로드할 문서를 왼쪽 체크박스에서 선택해주세요.")
+                st.info("ZIP으로 받을 문서를 체크해주세요.")
 else:
-    st.title("🏭 제품 선택")
+    st.title("제품별 인증서 / 확인서")
     products = df[["product_code", "product_name"]].drop_duplicates()
-    for _, r in products.iterrows():
-        st.markdown(f"- [{r['product_name']}](?product={r['product_code']})")
+    for _, row in products.iterrows():
+        st.markdown(f"- [{row['product_name']}](?product={row['product_code']})")
