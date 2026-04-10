@@ -269,20 +269,20 @@ def generate_origin_certificate_pdf(
 
     row_gap = 26
     draw_text(35, info_top - 25, "발신일자 :", 11, PDF_FONT_BOLD)
-    draw_text(115, info_top - 25, today, 11, PDF_FONT)
+    draw_text(100, info_top - 25, today, 11, PDF_FONT)
     
     draw_text(35, info_top - 25 - row_gap, "수    신 :", 11, PDF_FONT_BOLD)
-    draw_text(115, info_top - 25 - row_gap, receiver or "수신자제위", 11, PDF_FONT)
+    draw_text(100, info_top - 25 - row_gap, receiver or "수신자제위", 11, PDF_FONT)
 
     draw_text(35, info_top - 25 - row_gap*2, "참    조 :", 11, PDF_FONT_BOLD)
 
     # 제목 위치 조정 (선이 글자 아래로 가도록)
     draw_text(35, info_top - 25 - row_gap*3, "제    목 :", 11, PDF_FONT_BOLD)
-    draw_text(115, info_top - 25 - row_gap*3, "원산지 증명", 11, PDF_FONT) 
+    draw_text(100, info_top - 25 - row_gap*3, "원산지 증명", 11, PDF_FONT) 
 
     body_y = info_bottom - 35
     draw_text(45, body_y, "1. 귀사의 일익 번창하심을 진심으로 기원하오며, 그 동안 저희 사에 베풀어 주신 각별한 애호에 감사드립니다.", 11, PDF_FONT)
-    draw_text(40, body_y - 58, "2. 귀사에 납품되는 다음 제품의 원료 원산지는 아래와 같습니다.", 11, PDF_FONT)
+    draw_text(45, body_y - 50, "2. 귀사에 납품되는 다음 제품의 원료 원산지는 아래와 같습니다.", 11, PDF_FONT)
 
     # 제품 정보 테이블 설정
     table_top = body_y - 85
