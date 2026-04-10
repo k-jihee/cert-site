@@ -412,7 +412,8 @@ if product_code:
 
                     output_file_name = file_name
 
-                    col1, col2, col3 = st.columns([0.55, 4.45, 2.0])
+                    # --- 레이아웃 및 텍스트 수정 (파일 다운로드) ---
+                    col1, col2, col3 = st.columns([0.5, 3.5, 1.0])
 
                     with col1:
                         checked = st.checkbox(
@@ -427,7 +428,7 @@ if product_code:
 
                     with col3:
                         st.download_button(
-                            label=f"{cert_name} 다운로드",
+                            label="다운로드",
                             data=file_bytes,
                             file_name=output_file_name,
                             mime="application/pdf",
@@ -473,7 +474,8 @@ if product_code:
                 file_bytes = pdf_data.getvalue()
                 output_file_name = f"{product_name}_{cert_name}_{datetime.today().strftime('%Y%m%d')}.pdf"
 
-                col1, col2, col3 = st.columns([0.55, 4.45, 2.0])
+                # --- 레이아웃 및 텍스트 수정 (템플릿 생성) ---
+                col1, col2, col3 = st.columns([0.5, 3.5, 1.0])
 
                 with col1:
                     checked = st.checkbox(
@@ -488,7 +490,7 @@ if product_code:
 
                 with col3:
                     st.download_button(
-                        label=f"{cert_name} 발급",
+                        label="다운로드",
                         data=file_bytes,
                         file_name=output_file_name,
                         mime="application/pdf",
