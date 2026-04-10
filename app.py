@@ -9,7 +9,7 @@ from reportlab.lib.pagesizes import A4
 from reportlab.pdfbase.ttfonts import TTFont
 from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfgen import canvas
-from reportlab.lib.utils import
+from reportlab.lib.utils import ImageReader
 from reportlab.pdfbase.pdfmetrics import stringWidth
 
 st.set_page_config(page_title="인증서 다운로드", layout="centered")
