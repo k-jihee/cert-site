@@ -62,7 +62,11 @@ if not os.path.exists(CSV_PATH):
 
 df = pd.read_csv(CSV_PATH)
 
-# 동일 문서 중복 제거
+# 공백 제거 및 기본 정제
+if "cert_name" in df.columns:
+    df["cert_name"] = df["cert_name"].str.strip()
+
+# 동일 문서 중복 제거 (기본)
 dedupe_cols = ["product_code", "cert_name", "type", "template_type", "file"]
 existing_dedupe_cols = [col for col in dedupe_cols if col in df.columns]
 if existing_dedupe_cols:
@@ -377,11 +381,17 @@ query_params = st.query_params
 product_code = query_params.get("product")
 
 if product_code:
-    product_data = df[df["product_code"] == product_code]
+    product_data = df[df["product_code"] == product_code].copy()
 
     if len(product_data) == 0:
         st.error("해당 제품을 찾을 수 없습니다.")
     else:
+        # 중복 방지 로직 강화: cert_name 기준으로 중복 제거 (내용이 있는 행을 우선)
+        # file이나 template_type이 채워진 행을 위로 올림
+        product_data['has_content'] = product_data['file'].notna() | product_data['template_type'].notna()
+        product_data = product_data.sort_values(by='has_content', ascending=False)
+        product_data = product_data.drop_duplicates(subset=['cert_name'], keep='first')
+
         product_name = product_data.iloc[0]["product_name"]
         st.title(f"{product_name} 인증서 / 확인서")
         st.write("필요한 문서를 체크한 뒤 ZIP으로 한 번에 다운로드할 수 있습니다.")
@@ -412,7 +422,6 @@ if product_code:
 
                     output_file_name = file_name
 
-                    # --- 레이아웃 및 텍스트 수정 (파일 다운로드) ---
                     col1, col2, col3 = st.columns([0.5, 3.5, 1.0])
 
                     with col1:
@@ -474,7 +483,6 @@ if product_code:
                 file_bytes = pdf_data.getvalue()
                 output_file_name = f"{product_name}_{cert_name}_{datetime.today().strftime('%Y%m%d')}.pdf"
 
-                # --- 레이아웃 및 텍스트 수정 (템플릿 생성) ---
                 col1, col2, col3 = st.columns([0.5, 3.5, 1.0])
 
                 with col1:
