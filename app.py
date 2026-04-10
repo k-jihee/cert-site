@@ -407,7 +407,9 @@ def generate_allergen_certificate_pdf(
     table_top = body_y - 85
     table_height = 85
     table_bottom = table_top - table_height
-    x0, x1, x2 = 25, 250, width - 25
+    x0 = table_width_margin
+    x2 = width - table_width_margin
+    x1 = x0 + (x2 - x0) * 0.4   # 왼쪽 40%, 오른쪽 60% 비율
 
     c.rect(x0, table_bottom, x2 - x0, table_top - table_bottom)
     c.line(x1, table_bottom, x1, table_top)
