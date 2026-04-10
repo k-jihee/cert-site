@@ -476,7 +476,7 @@ def generate_standard_certificate_pdf(
     )
 
     draw_text(c, 45, table_bottom - 40, "3. 향후에도 양질의 제품만을 공급해 드릴 수 있도록 최선을 다하겠습니다.", 11, PDF_FONT)
-    draw_text(c, width - 85, 160, "1부.끝.", 11, PDF_FONT)
+    draw_text(c, width - 85, 300, "1부.끝.", 11, PDF_FONT)
 
     draw_common_footer(c, width)
 
