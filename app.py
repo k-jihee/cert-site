@@ -425,7 +425,7 @@ def generate_allergen_certificate_pdf(
     draw_center((x0 + x1) / 2, content_mid_y, product_name, 12, PDF_FONT)
     draw_center((x1 + x2) / 2, content_mid_y, "해당없음", 11, PDF_FONT)
     
-    draw_text(45, table_bottom - 35, "3. 향후에도 당사는 제품 안전 및 품질관리에 최선을 다하겠습니다.", 11, PDF_FONT)
+    draw_text(45, table_bottom - 35, "3. 향후에도 양질의 제품만을 공급해 드릴 수 있도록 최선을 다하겠습니다.", 11, PDF_FONT)
     draw_text(width - 85, 120, "1부.끝.", 11, PDF_FONT)
 
     footer_y = 115
