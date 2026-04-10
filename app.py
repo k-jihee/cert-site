@@ -750,7 +750,7 @@ if product_code:
                         receiver=str(row.get("receiver", "수신자제위"))
                     )
                 elif template_type == "no_melamine":
-                    pdf_data = generate_non_irradiated_certificate_pdf(
+                    pdf_data = generate_no_melamine_certificate_pdf(
                         product_name=product_name,
                         receiver=str(row.get("receiver", "수신자제위"))
                     )
