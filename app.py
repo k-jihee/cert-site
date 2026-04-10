@@ -307,7 +307,7 @@ def generate_origin_certificate_pdf(
     draw_wrapped_centered_text(c, origin_country or "-", (x2 + x3) / 2, content_mid_y + 2, 
                                (x3 - x2) - 15, PDF_FONT, 10, line_gap=13)
 
-    draw_text(45, table_bottom - 35, "3. 향후에도 양질의 제품만을 공급해 드릴 수 있도록 최선을 다하겠습니다.", 11, PDF_FONT)
+    draw_text(45, table_bottom - 40, "3. 향후에도 양질의 제품만을 공급해 드릴 수 있도록 최선을 다하겠습니다.", 11, PDF_FONT)
     draw_text(width - 85, 120, "1부.끝.", 11, PDF_FONT)
 
     # 하단 직인 및 주소 영역
@@ -425,7 +425,7 @@ def generate_allergen_certificate_pdf(
     draw_center((x0 + x1) / 2, content_mid_y, product_name, 12, PDF_FONT)
     draw_center((x1 + x2) / 2, content_mid_y, "해당없음", 11, PDF_FONT)
     
-    draw_text(45, table_bottom - 35, "3. 향후에도 양질의 제품만을 공급해 드릴 수 있도록 최선을 다하겠습니다.", 11, PDF_FONT)
+    draw_text(45, table_bottom - 40, "3. 향후에도 양질의 제품만을 공급해 드릴 수 있도록 최선을 다하겠습니다.", 11, PDF_FONT)
     draw_text(width - 85, 120, "1부.끝.", 11, PDF_FONT)
 
     footer_y = 115
@@ -542,7 +542,7 @@ def generate_non_irradiated_certificate_pdf(
     draw_center((x0 + x1) / 2, content_mid_y, product_name, 12, PDF_FONT)
     draw_center((x1 + x2) / 2, content_mid_y, "해당없음", 11, PDF_FONT)
     
-    draw_text(45, table_bottom - 35, "3. 향후에도 양질의 제품만을 공급해 드릴 수 있도록 최선을 다하겠습니다.", 11, PDF_FONT)
+    draw_text(45, table_bottom - 40, "3. 향후에도 양질의 제품만을 공급해 드릴 수 있도록 최선을 다하겠습니다.", 11, PDF_FONT)
     draw_text(width - 85, 120, "1부.끝.", 11, PDF_FONT)
 
     footer_y = 115
