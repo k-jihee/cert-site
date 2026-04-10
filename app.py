@@ -620,7 +620,8 @@ def generate_no_melamine_certificate_pdf(
 
     body_y = info_bottom - 35
     draw_text(45, body_y, "1. 귀사의 일익 번창하심을 진심으로 기원하오며, 그 동안 저희 사에 베풀어 주신 각별한 애호에 감사드립니다.", 11, PDF_FONT)
-    draw_text(45, body_y - 50, f"2. 우리사에서 제조하는 {product_name} 제품 제조공정 및 보관과정에서 멜라민을 사용하고 있지 않음을 확인하여 드립니다.", 11, PDF_FONT)
+    draw_text(45, body_y - 50, f"2. 우리사에서 제조하는 {product_name} 제품 제조공정 및 보관과정에서 멜라민을 사용하고 있지 않음을", 11, PDF_FONT)
+    draw_text(58, body_y - 70, "확인하여 드립니다.", 11,PDF_FONT)
     
     # 표 
     table_top = body_y - 85
