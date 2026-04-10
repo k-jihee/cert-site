@@ -721,9 +721,8 @@ def generate_gluten_free_certificate_pdf(
 
     body_y = info_bottom - 35
     draw_text(45, body_y, "1. 귀사의 일익 번창하심을 진심으로 기원하오며, 그 동안 저희 사에 베풀어 주신 각별한 애호에 감사드립니다.", 11, PDF_FONT)
-    draw_text(45, body_y - 50, f"2. 우리사에서 제조하는 {product_name} 제품에는 글루텐 유래 원료를 사용하지 않으며, 함유라고 있지 않습니다.", 11, PDF_FONT)
-    draw_text(58, body_y - 70, "드립니다.", 11,PDF_FONT)
-    
+    draw_text(45, body_y - 50, f"2. 우리사에서 제조하는 {product_name} 제품에는 글루텐 유래 원료를 사용하지 않으며, 함유하고 있지 않습니다.", 11, PDF_FONT)
+   
     # 표 
     table_top = body_y - 85
     table_height = 85
