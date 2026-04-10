@@ -267,24 +267,25 @@ def generate_origin_certificate_pdf(
     info_bottom = info_top - info_height
     c.rect(15, info_bottom, width - 30, info_top - info_bottom)
 
-    num_rows = 4
     row_gap = 26
+    font_size = 11
+    num_rows = 4
 
-    center_y = (info_top + info_bottom) / 2
-    offset = 10
-    start_y = center_y + (row_gap * (num_rows - 1) / 2)
+    text_block_height = font_size + row_gap * (num_rows - 1)
+    top_bottom_padding = (info_height - text_block_height) / 2
+    start_y = info_top - top_bottom_padding - font_size + 2
     
-    draw_text(35, start_y, "발신일자 :", 11, PDF_FONT_BOLD)
-    draw_text(100, start_y, today, 11, PDF_FONT)
+    draw_text(35, start_y, "발신일자 :", font_size, PDF_FONT_BOLD)
+    draw_text(100, start_y, today, font_size, PDF_FONT)
     
-    draw_text(35, start_y - row_gap, "수    신 :", 11, PDF_FONT_BOLD)
-    draw_text(100, start_y - row_gap, receiver or "수신자제위", 11, PDF_FONT)
+    draw_text(35, start_y - row_gap, "수    신 :", font_size, PDF_FONT_BOLD)
+    draw_text(100, start_y - row_gap, receiver or "수신자제위", font_size, PDF_FONT)
 
-    draw_text(35, start_y - row_gap*2, "참    조 :", 11, PDF_FONT_BOLD)
+    draw_text(35, start_y - row_gap*2, "참    조 :", font_size, PDF_FONT_BOLD)
 
     # 제목 위치 조정 (선이 글자 아래로 가도록)
-    draw_text(35, start_y - row_gap*3, "제    목 :", 11, PDF_FONT_BOLD)
-    draw_text(100, start_y - row_gap*3, "원산지 증명", 11, PDF_FONT) 
+    draw_text(35, start_y - row_gap*3, "제    목 :", font_size, PDF_FONT_BOLD)
+    draw_text(100, start_y - row_gap*3, "원산지 증명", font_size, PDF_FONT) 
 
     body_y = info_bottom - 35
     draw_text(45, body_y, "1. 귀사의 일익 번창하심을 진심으로 기원하오며, 그 동안 저희 사에 베풀어 주신 각별한 애호에 감사드립니다.", 11, PDF_FONT)
