@@ -287,42 +287,6 @@ def draw_three_column_table_for_origin(
 
     return table_bottom
 
-
-# -----------------------------
-# 기본 템플릿 문서
-# -----------------------------
-def get_template_lines(product_name: str, template_type: str):
-    if template_type == "plant":
-        title = "식물성 원재료 확인서"
-        lines = [
-            "당사는 아래 제품의 원재료가 식물성 원재료 기준에 따라 검토되었음을 확인합니다.",
-            "",
-            f"제품명: {product_name}",
-            "본 확인은 당사 원재료 구성 정보에 근거합니다.",
-        ]
-    elif template_type == "non_animal":
-        title = "비동물성 원료 확인서"
-        lines = [
-            "당사는 아래 제품이 동물성 유래 원료를 사용하지 않은 기준으로 검토되었음을 확인합니다.",
-            "",
-            f"제품명: {product_name}",
-            "본 확인은 당사 원재료 구성 및 제조공정 정보에 근거합니다.",
-        ]
-    elif template_type == "no_pork":
-        title = "돼지고기 미사용 확인서"
-        lines = [
-            "당사는 아래 제품의 제조에 돼지고기 및 돼지고기 유래 원료를 사용하지 않음을 확인합니다.",
-            "",
-            f"제품명: {product_name}",
-        ]
-    else:
-        title = "확인서"
-        lines = [
-            f"제품명: {product_name}",
-        ]
-    return title, lines
-
-
 def generate_template_pdf(product_name: str, template_type: str) -> io.BytesIO:
     buffer = io.BytesIO()
     c = canvas.Canvas(buffer, pagesize=A4)
@@ -421,6 +385,36 @@ CERTIFICATE_CONFIG = {
         ],
         "table_headers": ["제품명", "글루텐 함유 여부"],
         "table_values": lambda product, row: [product, "미함유"],
+    },
+    "plant": {
+        "subject": "식물성 원재료 사용 확인",
+        "body_lines": [
+            "1. 귀사의 일익 번창하심을 진심으로 기원하오며, 그 동안 저희 사에 베풀어 주신 각별한 애호에 감사드립니다.",
+            lambda product, row: f"2. 우리사에서 제조하는 {product} 제품은 자사 제조시설에서 식물성 원료인 옥수수만으로 제조되고 있으며",
+            "   동물성 성분이 포함되지 않은 식품성 원료를 사용하였음을 확인하여 드립니다.",
+        ],
+        "table_headers": ["제품명", "식품성 원재료 사용 여부"],
+        "table_values": lambda product, row: [product, "식물성 원재료 사용"],
+    },
+    "non_animal": {
+        "subject": "비동물실험 확인",
+        "body_lines": [
+            "1. 귀사의 일익 번창하심을 진심으로 기원하오며, 그 동안 저희 사에 베풀어 주신 각별한 애호에 감사드립니다.",
+            lambda product, row: f"2. 우리사에서 제조하는 {product} 제품과 관련하여 개발부터 현재까지 동물실험을 하지 않았으며 향후에도",
+            "   동물실험을 진행하지 않을 것임을 확인하여 드립니다.",
+        ],
+        "table_headers": ["제품명", "동물실험 여부"],
+        "table_values": lambda product, row: [product, "해당없음"],
+    },
+    "no_pork": {
+        "subject": "돼지고기 미사용 확인",
+        "body_lines": [
+            "1. 귀사의 일익 번창하심을 진심으로 기원하오며, 그 동안 저희 사에 베풀어 주신 각별한 애호에 감사드립니다.",
+            lambda product, row: f"2. 우리사에서 제조하는 {product} 제품은 돼지고기를 함유하지 있지 않으며, 제품을 생산하는 제조시설과",
+            "   도구 또한 돼지고기와 돼지고기 유래 물질을 사용하지 않음을 확인하여 드립니다.",
+        ],
+        "table_headers": ["제품명", "돼지고기 사용 여부"],
+        "table_values": lambda product, row: [product, "해당없음"],
     },
 }
 
