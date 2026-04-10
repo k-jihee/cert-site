@@ -391,7 +391,7 @@ CERTIFICATE_CONFIG = {
         "body_lines": [
             "1. 귀사의 일익 번창하심을 진심으로 기원하오며, 그 동안 저희 사에 베풀어 주신 각별한 애호에 감사드립니다.",
             lambda product, row: f"2. 우리사에서 제조하는 {product} 제품은 자사 제조시설에서 식물성 원료인 옥수수만으로 제조되고 있으며",
-            "   동물성 성분이 포함되지 않은 식품성 원료를 사용하였음을 확인하여 드립니다.",
+            "   동물성 성분이 포함되지 않은 식물성 원료를 사용하였음을 확인하여 드립니다.",
         ],
         "table_headers": ["제품명", "식품성 원재료 사용 여부"],
         "table_values": lambda product, row: [product, "식물성 원재료 사용"],
@@ -476,7 +476,7 @@ def generate_standard_certificate_pdf(
     )
 
     draw_text(c, 45, table_bottom - 40, "3. 향후에도 양질의 제품만을 공급해 드릴 수 있도록 최선을 다하겠습니다.", 11, PDF_FONT)
-    draw_text(c, width - 85, 120, "1부.끝.", 11, PDF_FONT)
+    draw_text(c, width - 85, 160, "1부.끝.", 11, PDF_FONT)
 
     draw_common_footer(c, width)
 
