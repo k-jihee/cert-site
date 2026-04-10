@@ -139,9 +139,9 @@ def get_template_lines(product_name: str, template_type: str):
     return title, lines
 
 
-def draw_wrapped_text(c, text, x, y, max_width, font_name, font_size, line_gap=14):
+def draw_wrapped_centered_text(c, text, center_x, start_y, max_width, font_name, font_size, line_gap=14):
+    """텍스트를 줄바꿈하여 지정된 x축 중앙에 맞춰 그리는 함수"""
     c.setFont(font_name, font_size)
-
     words = str(text).split(" ")
     lines = []
     current = ""
@@ -154,14 +154,15 @@ def draw_wrapped_text(c, text, x, y, max_width, font_name, font_size, line_gap=1
             if current:
                 lines.append(current)
             current = word
-
     if current:
         lines.append(current)
 
-    for i, line in enumerate(lines):
-        c.drawString(x, y - i * line_gap, line)
+    # 전체 텍스트 높이를 고려하여 시작 Y 위치 보정 (수직 중앙 정렬용)
+    total_height = (len(lines) - 1) * line_gap
+    y_offset = start_y + (total_height / 2)
 
-    return y - (len(lines) - 1) * line_gap
+    for i, line in enumerate(lines):
+        c.drawCentredString(center_x, y_offset - (i * line_gap), line)
 
 
 def generate_template_pdf(product_name: str, template_type: str) -> io.BytesIO:
@@ -263,7 +264,6 @@ def generate_origin_certificate_pdf(
 
     row_1 = info_top - 24
     row_2 = info_top - 52
-    row_3 = info_top - 80
     row_4 = info_top - 108
 
     label_x = 30
@@ -271,89 +271,65 @@ def generate_origin_certificate_pdf(
 
     draw_text(label_x, row_1, "발신일자 :", 11, PDF_FONT_BOLD)
     draw_text(value_x, row_1, today, 11, PDF_FONT)
-
     draw_text(label_x, row_2, "수    신 :", 11, PDF_FONT_BOLD)
     draw_text(value_x, row_2, receiver or "수신자제위", 11, PDF_FONT)
-
-    draw_text(label_x, row_3, "참    조 :", 11, PDF_FONT_BOLD)
-
+    draw_text(label_x, info_top - 80, "참    조 :", 11, PDF_FONT_BOLD)
     draw_text(label_x, row_4, "제    목 :", 11, PDF_FONT_BOLD)
     draw_text(value_x, row_4, "원산지 증명", 11, PDF_FONT)
 
     body_y = info_bottom - 30
-    draw_text(
-        40,
-        body_y,
-        "1. 귀사의 일익 번창하심을 진심으로 기원하오며, 그 동안 저희 사에 베풀어",
-        11,
-        PDF_FONT,
-    )
-    draw_text(
-        58,
-        body_y - 20,
-        "주신 각별한 애호에 감사 드립니다.",
-        11,
-        PDF_FONT,
-    )
+    draw_text(40, body_y, "1. 귀사의 일익 번창하심을 진심으로 기원하오며, 그 동안 저희 사에 베풀어", 11, PDF_FONT)
+    draw_text(58, body_y - 20, "주신 각별한 애호에 감사 드립니다.", 11, PDF_FONT)
+    draw_text(40, body_y - 58, "2. 귀사에 납품되는 다음 제품의 원료 원산지는 아래와 같습니다.", 11, PDF_FONT)
 
-    draw_text(
-        40,
-        body_y - 58,
-        "2. 귀사에 납품되는 다음 제품의 원료 원산지는 아래와 같습니다.",
-        11,
-        PDF_FONT,
-    )
-
+    # 테이블 설정
     table_top = body_y - 88
-    table_bottom = table_top - 74
+    table_height = 80  # 칸 높이를 약간 더 키움
+    table_bottom = table_top - table_height
 
-    x0 = 25
-    x1 = 170
-    x2 = 340
-    x3 = width - 25
+    x0, x1, x2, x3 = 25, 170, 340, width - 25
 
     c.rect(x0, table_bottom, x3 - x0, table_top - table_bottom)
     c.line(x1, table_bottom, x1, table_top)
     c.line(x2, table_bottom, x2, table_top)
 
-    header_y = table_top - 24
-    c.line(x0, header_y, x3, header_y)
+    header_height = 24
+    content_y_mid = table_bottom + (table_height - header_height) / 2
+    c.line(x0, table_top - header_height, x3, table_top - header_height)
 
+    # 헤더 텍스트
     draw_center((x0 + x1) / 2, table_top - 16, "제품명", 10.5, PDF_FONT_BOLD)
     draw_center((x1 + x2) / 2, table_top - 16, "주원료", 10.5, PDF_FONT_BOLD)
     draw_center((x2 + x3) / 2, table_top - 16, "원료원산지", 10.5, PDF_FONT_BOLD)
 
-    draw_center((x0 + x1) / 2, table_bottom + 22, product_name, 14, PDF_FONT)
-    draw_center((x1 + x2) / 2, table_bottom + 22, main_ingredient or "-", 12, PDF_FONT)
+    # 내용 텍스트 (정중앙 배치)
+    draw_center((x0 + x1) / 2, content_y_mid - 4, product_name, 12, PDF_FONT)
+    draw_center((x1 + x2) / 2, content_y_mid - 4, main_ingredient or "-", 11, PDF_FONT)
 
-    draw_wrapped_text(
+    # 원료원산지 줄바꿈 및 중앙 정렬 적용
+    draw_wrapped_centered_text(
         c,
         origin_country or "-",
-        x2 + 8,
-        table_bottom + 30,
-        (x3 - x2) - 16,
+        (x2 + x3) / 2,
+        content_y_mid - 2,
+        (x3 - x2) - 10,
         PDF_FONT,
-        10.5,
-        line_gap=12,
+        10,
+        line_gap=13
     )
 
-    draw_text(
-        40,
-        table_bottom - 34,
-        "3. 향후에도 양질의 제품만을 공급해 드릴 수 있도록 최선을 다하겠습니다.",
-        11,
-        PDF_FONT,
-    )
-
+    draw_text(40, table_bottom - 34, "3. 향후에도 양질의 제품만을 공급해 드릴 수 있도록 최선을 다하겠습니다.", 11, PDF_FONT)
     draw_text(width - 82, 118, "1부.끝.", 10.5, PDF_FONT)
 
-    draw_center(width / 2, 86, "인천광역시 서구 백범로 726", 11, PDF_FONT)
-    draw_center(width / 2, 64, "주식회사 삼양사", 11, PDF_FONT)
-    draw_center(width / 2, 42, "식품안전팀장", 11, PDF_FONT)
+    # 하단 직인 및 주소 영역
+    footer_y = 90
+    draw_center(width / 2, footer_y, "인천광역시 서구 백범로 726", 11, PDF_FONT)
+    draw_center(width / 2, footer_y - 22, "주식회사 삼양사", 12, PDF_FONT_BOLD)
+    draw_center(width / 2, footer_y - 44, "식품안전팀장", 11, PDF_FONT)
 
     if os.path.exists(STAMP_PATH):
         stamp = ImageReader(STAMP_PATH)
-        c.drawImage(stamp, width / 2 + 118, 26, width=68, height=68, mask="auto")
+        c.drawImage(stamp, width / 2 + 80, footer_y - 65, width=70, height=70, mask="auto")
 
     c.line(15, 35, width - 15, 35)
     draw_text(32, 22, "서식3-J113Rev.0", 8.5, PDF_FONT)
@@ -368,11 +344,9 @@ def generate_origin_certificate_pdf(
 
 def build_zip_from_documents(documents: List[Tuple[str, bytes]]) -> io.BytesIO:
     zip_buffer = io.BytesIO()
-
     with zipfile.ZipFile(zip_buffer, "w", zipfile.ZIP_DEFLATED) as zip_file:
         for file_name, file_bytes in documents:
             zip_file.writestr(file_name, file_bytes)
-
     zip_buffer.seek(0)
     return zip_buffer
 
@@ -386,8 +360,7 @@ if product_code:
     if len(product_data) == 0:
         st.error("해당 제품을 찾을 수 없습니다.")
     else:
-        # 중복 방지 로직 강화: cert_name 기준으로 중복 제거 (내용이 있는 행을 우선)
-        # file이나 template_type이 채워진 행을 위로 올림
+        # 중복 방지: 내용이 있는 행 우선 정렬 후 이름 기준 중복 제거
         product_data['has_content'] = product_data['file'].notna() | product_data['template_type'].notna()
         product_data = product_data.sort_values(by='has_content', ascending=False)
         product_data = product_data.drop_duplicates(subset=['cert_name'], keep='first')
@@ -402,80 +375,45 @@ if product_code:
             cert_name = str(row["cert_name"])
             doc_type = str(row["type"]).strip().lower()
             safe_cert_name = cert_name.strip().replace(" ", "_")
+            file_bytes, output_file_name = None, None
 
-            file_bytes = None
-            output_file_name = None
+            # 레이아웃 간격 고정
+            col1, col2, col3 = st.columns([0.5, 3.5, 1.0])
 
             if doc_type == "file":
-                file_name = row["file"] if "file" in row.index else ""
-
-                if pd.isna(file_name) or str(file_name).strip() == "":
+                file_name = str(row.get("file", "")).strip()
+                if pd.isna(row.get("file")) or not file_name:
                     st.info(f"{cert_name}: 아직 등록되지 않았습니다.")
                     continue
 
-                file_name = str(file_name).strip()
                 file_path = os.path.join(FILES_DIR, file_name)
-
                 if os.path.exists(file_path):
                     with open(file_path, "rb") as f:
                         file_bytes = f.read()
-
                     output_file_name = file_name
 
-                    col1, col2, col3 = st.columns([0.5, 3.5, 1.0])
-
                     with col1:
-                        checked = st.checkbox(
-                            label="",
-                            value=False,
-                            key=f"check_file_{product_code}_{safe_cert_name}_{idx}",
-                            label_visibility="collapsed",
-                        )
-
+                        checked = st.checkbox(label="", value=False, key=f"c_f_{product_code}_{idx}", label_visibility="collapsed")
                     with col2:
                         st.write(cert_name)
-
                     with col3:
-                        st.download_button(
-                            label="다운로드",
-                            data=file_bytes,
-                            file_name=output_file_name,
-                            mime="application/pdf",
-                            key=f"file_{product_code}_{safe_cert_name}_{idx}",
-                        )
-
+                        st.download_button(label="다운로드", data=file_bytes, file_name=output_file_name, mime="application/pdf", key=f"f_{product_code}_{idx}")
                     all_docs_for_zip.append((output_file_name, file_bytes, checked))
                 else:
-                    st.warning(f"{cert_name}: 파일 없음 ({file_name})")
+                    st.warning(f"{cert_name}: 파일 없음")
 
             elif doc_type == "template":
-                template_type = ""
-                if "template_type" in row.index and not pd.isna(row["template_type"]):
-                    template_type = str(row["template_type"]).strip().lower()
-
-                if template_type == "":
+                template_type = str(row.get("template_type", "")).strip().lower()
+                if not template_type or pd.isna(row.get("template_type")):
                     st.info(f"{cert_name}: 아직 등록되지 않았습니다.")
                     continue
 
                 if template_type == "origin":
-                    main_ingredient = ""
-                    origin_country = ""
-                    receiver = "수신자제위"
-
-                    if "main_ingredient" in row.index and not pd.isna(row["main_ingredient"]):
-                        main_ingredient = str(row["main_ingredient"]).strip()
-
-                    if "origin_country" in row.index and not pd.isna(row["origin_country"]):
-                        origin_country = str(row["origin_country"]).strip()
-
-                    if "receiver" in row.index and not pd.isna(row["receiver"]):
-                        receiver = str(row["receiver"]).strip()
-
                     pdf_data = generate_origin_certificate_pdf(
                         product_name=product_name,
-                        main_ingredient=main_ingredient,
-                        origin_country=origin_country,
-                        receiver=receiver,
+                        main_ingredient=str(row.get("main_ingredient", "-")),
+                        origin_country=str(row.get("origin_country", "-")),
+                        receiver=str(row.get("receiver", "수신자제위"))
                     )
                 else:
                     pdf_data = generate_template_pdf(product_name, template_type)
@@ -483,61 +421,23 @@ if product_code:
                 file_bytes = pdf_data.getvalue()
                 output_file_name = f"{product_name}_{cert_name}_{datetime.today().strftime('%Y%m%d')}.pdf"
 
-                col1, col2, col3 = st.columns([0.5, 3.5, 1.0])
-
                 with col1:
-                    checked = st.checkbox(
-                        label="",
-                        value=False,
-                        key=f"check_template_{product_code}_{safe_cert_name}_{template_type}_{idx}",
-                        label_visibility="collapsed",
-                    )
-
+                    checked = st.checkbox(label="", value=False, key=f"c_t_{product_code}_{idx}", label_visibility="collapsed")
                 with col2:
                     st.write(cert_name)
-
                 with col3:
-                    st.download_button(
-                        label="다운로드",
-                        data=file_bytes,
-                        file_name=output_file_name,
-                        mime="application/pdf",
-                        key=f"template_{product_code}_{safe_cert_name}_{template_type}_{idx}",
-                    )
-
+                    st.download_button(label="다운로드", data=file_bytes, file_name=output_file_name, mime="application/pdf", key=f"t_{product_code}_{idx}")
                 all_docs_for_zip.append((output_file_name, file_bytes, checked))
-
-            else:
-                st.warning(f"{cert_name}: type 값이 올바르지 않습니다.")
-
-        selected_docs = [
-            (file_name, file_bytes)
-            for file_name, file_bytes, checked in all_docs_for_zip
-            if checked
-        ]
 
         if all_docs_for_zip:
             st.divider()
-            st.subheader("선택 문서 일괄 다운로드")
-
+            selected_docs = [(f, b) for f, b, c in all_docs_for_zip if c]
             if selected_docs:
-                zip_buffer = build_zip_from_documents(selected_docs)
-
-                st.download_button(
-                    label="선택한 문서 ZIP 다운로드",
-                    data=zip_buffer,
-                    file_name=f"{product_name}_certificates_{datetime.today().strftime('%Y%m%d')}.zip",
-                    mime="application/zip",
-                    key=f"zip_{product_code}",
-                )
+                st.download_button(label="선택한 문서 ZIP 다운로드", data=build_zip_from_documents(selected_docs), file_name=f"{product_name}_docs.zip", mime="application/zip")
             else:
                 st.info("ZIP으로 받을 문서를 체크해주세요.")
-
 else:
     st.title("제품별 인증서 / 확인서")
-    st.write("제품을 선택하세요.")
-
     products = df[["product_code", "product_name"]].drop_duplicates()
-
     for _, row in products.iterrows():
         st.markdown(f"- [{row['product_name']}](?product={row['product_code']})")
