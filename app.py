@@ -230,8 +230,6 @@ def generate_origin_certificate_pdf(
     width, height = A4
     today = datetime.today().strftime("%Y-%m-%d")
 
-    page_left = 28
-
     def draw_text(x, y, text, size=11, font=PDF_FONT):
         c.setFont(font, size)
         c.drawString(x, y, str(text))
@@ -240,107 +238,99 @@ def generate_origin_certificate_pdf(
         c.setFont(font, size)
         c.drawCentredString(x, y, str(text))
 
+    #외곽 테두리
     c.setLineWidth(0.8)
     c.rect(15, 15, width - 30, height - 30)
 
+    # 상단 헤더 영역(로고 및 회사명)
+    header_top = height - 15
+    header_line = height - 70
+    
     if os.path.exists(LOGO_PATH):
         logo = ImageReader(LOGO_PATH)
-        c.drawImage(logo, page_left, height - 52, width=110, height=24, mask="auto")
+        c.drawImage(logo, 30, height - 55, width=110, height=24, mask="auto")
 
-    draw_center(width / 2, height - 38, "주식회사 삼 양 사", size=21, font=PDF_FONT_BOLD)
+    # 회사명 상하중앙 정렬(15~70 사이 정중앙)
+    draw_center(width / 2, (header_top + header_line)/2) - 8, "주식회사 삼 양 사", size=22, font=PDF_FONT_BOLD)
+    c.line(15,  header_line, width - 15,  header_line)
 
-    c.line(15, height - 66, width - 15, height - 66)
-    draw_center(
-        width / 2,
-        height - 83,
-        "우 22826 / 인천광역시 서구 백범로 726 / 전화: 032)570-8229 / 팩스: 032)570-8277",
-        size=9.5,
-        font=PDF_FONT,
-    )
+    # 주소 영역 상하중앙 정렬
+    address_line = height - 95
+    draw_center(width / 2, (header_line + address_line)/2 - 3,
+                "우 22826 / 인천광역시 서구 백범로 726 / 전화: 032)570-8229 / 팩스: 032)570-8277",
+                size=9.5, font=PDF_FONT)
+    c.line(15, address_line, width - 15, address_line)
 
-    info_top = height - 108
-    info_bottom = height - 210
+    # 정보 박스(발신일자, 수신등)
+    info_top = address_line - 15
+    info_height = 110
+    info_bottom = info_top - info_height
     c.rect(15, info_bottom, width - 30, info_top - info_bottom)
 
-    row_1 = info_top - 24
-    row_2 = info_top - 52
-    row_4 = info_top - 108
+    row_gap = 26
+    draw_text(35, info_top - 25, "발신일자 :", 11, PDF_FONT_BOLD)
+    draw_text(115, info_top - 25, today, 11, PDF_FONT)
+    
+    draw_text(35, info_top - 25 - row_gap, "수    신 :", 11, PDF_FONT_BOLD)
+    draw_text(115, info_top - 25 - row_gap, receiver or "수신자제위", 11, PDF_FONT)
 
-    label_x = 30
-    value_x = 110
+    draw_text(35, info_top - 25 - row_gap*2, "참    조 :", 11, PDF_FONT_BOLD)
 
-    draw_text(label_x, row_1, "발신일자 :", 11, PDF_FONT_BOLD)
-    draw_text(value_x, row_1, today, 11, PDF_FONT)
-    draw_text(label_x, row_2, "수    신 :", 11, PDF_FONT_BOLD)
-    draw_text(value_x, row_2, receiver or "수신자제위", 11, PDF_FONT)
-    draw_text(label_x, info_top - 80, "참    조 :", 11, PDF_FONT_BOLD)
-    draw_text(label_x, row_4, "제    목 :", 11, PDF_FONT_BOLD)
-    draw_text(value_x, row_4, "원산지 증명", 11, PDF_FONT)
+    # 제목 위치 조정 (선이 글자 아래로 가도록)
+    draw_text(35, info_top - 25 - row_gap*3, "제    목 :", 11, PDF_FONT_BOLD)
+    draw_text(115, info_top - 25 - row_gap*3, "원산지 증명", 11, PDF_FONT) 
 
-    body_y = info_bottom - 30
-    draw_text(40, body_y, "1. 귀사의 일익 번창하심을 진심으로 기원하오며, 그 동안 저희 사에 베풀어", 11, PDF_FONT)
-    draw_text(58, body_y - 20, "주신 각별한 애호에 감사 드립니다.", 11, PDF_FONT)
+    body_y = info_bottom - 35
+    draw_text(45, body_y, "1. 귀사의 일익 번창하심을 진심으로 기원하오며, 그 동안 저희 사에 베풀어 주신 각별한 애호에 감사드립니다.", 11, PDF_FONT)
     draw_text(40, body_y - 58, "2. 귀사에 납품되는 다음 제품의 원료 원산지는 아래와 같습니다.", 11, PDF_FONT)
 
-    # 테이블 설정
-    table_top = body_y - 88
-    table_height = 80  # 칸 높이를 약간 더 키움
+    # 제품 정보 테이블 설정
+    table_top = body_y - 85
+    table_height = 85   
     table_bottom = table_top - table_height
-
     x0, x1, x2, x3 = 25, 170, 340, width - 25
 
     c.rect(x0, table_bottom, x3 - x0, table_top - table_bottom)
     c.line(x1, table_bottom, x1, table_top)
     c.line(x2, table_bottom, x2, table_top)
 
-    header_height = 24
-    content_y_mid = table_bottom + (table_height - header_height) / 2
-    c.line(x0, table_top - header_height, x3, table_top - header_height)
+    header_h = 28
+    c.line(x0, table_top - header_h, x3, table_top - header_h)
 
     # 헤더 텍스트
-    draw_center((x0 + x1) / 2, table_top - 16, "제품명", 10.5, PDF_FONT_BOLD)
-    draw_center((x1 + x2) / 2, table_top - 16, "주원료", 10.5, PDF_FONT_BOLD)
-    draw_center((x2 + x3) / 2, table_top - 16, "원료원산지", 10.5, PDF_FONT_BOLD)
+    draw_center((x0 + x1) / 2, table_top - 15, "제품명", 12, PDF_FONT_BOLD)
+    draw_center((x1 + x2) / 2, table_top - 15, "주원료", 12, PDF_FONT_BOLD)
+    draw_center((x2 + x3) / 2, table_top - 15, "원료원산지", 12, PDF_FONT_BOLD)
 
-    # 내용 텍스트 (정중앙 배치)
-    draw_center((x0 + x1) / 2, content_y_mid - 4, product_name, 12, PDF_FONT)
-    draw_center((x1 + x2) / 2, content_y_mid - 4, main_ingredient or "-", 11, PDF_FONT)
+    content_mid_y = table_bottom + (table_height - header_h) / 2 - 4
+    draw_center((x0 + x1) / 2, content_mid_y, product_name, 12, PDF_FONT)
+    draw_center((x1 + x2) / 2, content_mid_y, main_ingredient or "-", 11, PDF_FONT)
 
-    # 원료원산지 줄바꿈 및 중앙 정렬 적용
-    draw_wrapped_centered_text(
-        c,
-        origin_country or "-",
-        (x2 + x3) / 2,
-        content_y_mid - 2,
-        (x3 - x2) - 10,
-        PDF_FONT,
-        10,
-        line_gap=13
-    )
+    draw_wrapped_centered_text(c, origin_country or "-", (x2 + x3) / 2, content_mid_y + 2, 
+                               (x3 - x2) - 15, PDF_FONT, 10, line_gap=13)
 
-    draw_text(40, table_bottom - 34, "3. 향후에도 양질의 제품만을 공급해 드릴 수 있도록 최선을 다하겠습니다.", 11, PDF_FONT)
-    draw_text(width - 82, 118, "1부.끝.", 10.5, PDF_FONT)
+    draw_text(45, table_bottom - 35, "3. 향후에도 양질의 제품만을 공급해 드릴 수 있도록 최선을 다하겠습니다.", 11, PDF_FONT)
+    draw_text(width - 85, 120, "1부.끝.", 11, PDF_FONT)
 
     # 하단 직인 및 주소 영역
-    footer_y = 90
+    footer_y = 95
     draw_center(width / 2, footer_y, "인천광역시 서구 백범로 726", 11, PDF_FONT)
     draw_center(width / 2, footer_y - 22, "주식회사 삼양사", 12, PDF_FONT_BOLD)
     draw_center(width / 2, footer_y - 44, "식품안전팀장", 11, PDF_FONT)
 
     if os.path.exists(STAMP_PATH):
         stamp = ImageReader(STAMP_PATH)
-        c.drawImage(stamp, width / 2 + 80, footer_y - 65, width=70, height=70, mask="auto")
+        c.drawImage(stamp, width / 2 + 75, footer_y - 65, width=70, height=70, mask="auto")
 
     c.line(15, 35, width - 15, 35)
     draw_text(32, 22, "서식3-J113Rev.0", 8.5, PDF_FONT)
     draw_center(width / 2, 22, "㈜삼양사 인천1공장", 8.5, PDF_FONT)
-    draw_text(width - 158, 22, "A4(210mm X 297mm)", 8.5, PDF_FONT)
+    draw_text(width - 160, 22, "A4(210mm X 297mm)", 8.5, PDF_FONT)
 
     c.showPage()
     c.save()
     buffer.seek(0)
     return buffer
-
 
 def build_zip_from_documents(documents: List[Tuple[str, bytes]]) -> io.BytesIO:
     zip_buffer = io.BytesIO()
@@ -349,7 +339,6 @@ def build_zip_from_documents(documents: List[Tuple[str, bytes]]) -> io.BytesIO:
             zip_file.writestr(file_name, file_bytes)
     zip_buffer.seek(0)
     return zip_buffer
-
 
 query_params = st.query_params
 product_code = query_params.get("product")
