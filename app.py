@@ -447,6 +447,123 @@ def generate_allergen_certificate_pdf(
     buffer.seek(0)
     return buffer
 
+def generate_non_irradiated_certificate_pdf(
+    product_name: str,
+    receiver: str = "수신자제위",
+) -> io.BytesIO:
+    buffer = io.BytesIO()
+    c = canvas.Canvas(buffer, pagesize=A4)
+    width, height = A4
+    today = datetime.today().strftime("%Y-%m-%d")
+
+    def draw_text(x, y, text, size=11, font=PDF_FONT):
+        c.setFont(font, size)
+        c.drawString(x, y, str(text))
+
+    def draw_center(x, y, text, size=11, font=PDF_FONT):
+        c.setFont(font, size)
+        c.drawCentredString(x, y, str(text))
+
+    # 외곽 테두리
+    c.setLineWidth(0.8)
+    c.rect(15, 15, width - 30, height - 30)
+
+    # 상단 헤더 영역
+    header_top = height - 15
+    header_line = height - 70
+
+    if os.path.exists(LOGO_PATH):
+        logo = ImageReader(LOGO_PATH)
+        c.drawImage(logo, 30, height - 55, width=110, height=24, mask="auto")
+
+    draw_center(width / 2, (header_top + header_line)/2 - 8, "주식회사 삼양사", size=22, font=PDF_FONT_BOLD)
+    c.line(15, header_line, width - 15, header_line)
+
+    # 주소 영역
+    address_line = height - 95
+    draw_center(
+        width / 2,
+        (header_line + address_line)/2 - 3,
+        "우 22826 / 인천광역시 서구 백범로 726 / 전화: 032)570-8229 / 팩스: 032)570-8277",
+        size=9.5,
+        font=PDF_FONT
+    )
+    c.line(15, address_line, width - 15, address_line)
+
+    # 정보 박스
+    info_top = address_line
+    info_height = 110
+    info_bottom = info_top - info_height
+    c.rect(15, info_bottom, width - 30, info_top - info_bottom)
+
+    row_gap = 26
+    font_size = 11
+    num_rows = 4
+
+    text_block_height = font_size + row_gap * (num_rows - 1)
+    top_bottom_padding = (info_height - text_block_height) / 2
+    start_y = info_top - top_bottom_padding - font_size + 2
+
+    draw_text(35, start_y, "발신일자 :", font_size, PDF_FONT_BOLD)
+    draw_text(100, start_y, today, font_size, PDF_FONT)
+
+    draw_text(35, start_y - row_gap, "수    신 :", font_size, PDF_FONT_BOLD)
+    draw_text(100, start_y - row_gap, receiver or "수신자제위", font_size, PDF_FONT)
+
+    draw_text(35, start_y - row_gap*2, "참    조 :", font_size, PDF_FONT_BOLD)
+
+    draw_text(35, start_y - row_gap*3, "제    목 :", font_size, PDF_FONT_BOLD)
+    draw_text(100, start_y - row_gap*3, "방사선 조사 유무 관련 件", font_size, PDF_FONT)
+
+    body_y = info_bottom - 35
+    draw_text(45, body_y, "1. 귀사의 일익 번창하심을 진심으로 기원하오며, 그 동안 저희 사에 베풀어 주신 각별한 애호에 감사드립니다.", 11, PDF_FONT)
+    draw_text(45, body_y - 50, f"2. 우리사에서 제조하는 {product_name} 제품 생산시 원료의 구매, 제품 생산공정 및 보관, 운송되는 전 과정에서", 11, PDF_FONT)
+    draw_text(58, body_y - 70, "방사선조사를 하지 않고 있음을 확인하여 드립니다.", 11,PDF_FONT)
+
+    # 표 
+    table_top = body_y - 85
+    table_height = 85
+    table_bottom = table_top - table_height
+
+    x0 = 80
+    x2 = width - 80
+    x1 = x0 + (x2 - x0) * 0.4   # 왼쪽 40%, 오른쪽 60% 비율
+
+    c.rect(x0, table_bottom, x2 - x0, table_top - table_bottom)
+    c.line(x1, table_bottom, x1, table_top)
+
+    header_h = 28
+    c.line(x0, table_top - header_h, x2, table_top - header_h)
+
+    draw_center((x0 + x1) / 2, table_top - 15, "제품명", 12, PDF_FONT_BOLD)
+    draw_center((x1 + x2) / 2, table_top - 15, "방사선조사 여부", 12, PDF_FONT_BOLD)
+
+    content_mid_y = table_bottom + (table_height - header_h) / 2 - 4
+    draw_center((x0 + x1) / 2, content_mid_y, product_name, 12, PDF_FONT)
+    draw_center((x1 + x2) / 2, content_mid_y, "해당없음", 11, PDF_FONT)
+    
+    draw_text(45, table_bottom - 35, "3. 향후에도 양질의 제품만을 공급해 드릴 수 있도록 최선을 다하겠습니다.", 11, PDF_FONT)
+    draw_text(width - 85, 120, "1부.끝.", 11, PDF_FONT)
+
+    footer_y = 115
+    draw_center(width / 2, footer_y, "인천광역시 서구 백범로 726", 11, PDF_FONT)
+    draw_center(width / 2, footer_y - 22, "주식회사 삼양사", 12, PDF_FONT_BOLD)
+    draw_center(width / 2, footer_y - 44, "식품안전팀장", 11, PDF_FONT)
+
+    if os.path.exists(STAMP_PATH):
+        stamp = ImageReader(STAMP_PATH)
+        c.drawImage(stamp, width / 2 + 75, footer_y - 65, width=70, height=70, mask="auto")
+
+    c.line(15, 35, width - 15, 35)
+    draw_text(32, 22, "서식3-J113Rev.0", 8.5, PDF_FONT)
+    draw_center(width / 2, 22, "㈜삼양사 인천1공장", 8.5, PDF_FONT)
+    draw_text(width - 160, 22, "A4(210mm X 297mm)", 8.5, PDF_FONT)
+
+    c.showPage()
+    c.save()
+    buffer.seek(0)
+    return buffer
+
 
 def build_zip_from_documents(documents: List[Tuple[str, bytes]]) -> io.BytesIO:
     zip_buffer = io.BytesIO()
@@ -522,6 +639,11 @@ if product_code:
                     )
                 elif template_type == "allergen":
                     pdf_data = generate_allergen_certificate_pdf(
+                        product_name=product_name,
+                        receiver=str(row.get("receiver", "수신자제위"))
+                    )
+                elif template_type == "non_irradiated":
+                    pdf_data = generate_non_irradiated_certificate_pdf(
                         product_name=product_name,
                         receiver=str(row.get("receiver", "수신자제위"))
                     )
