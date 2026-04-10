@@ -313,7 +313,7 @@ def generate_origin_certificate_pdf(
     draw_text(width - 85, 120, "1부.끝.", 11, PDF_FONT)
 
     # 하단 직인 및 주소 영역
-    footer_y = 95
+    footer_y = 115
     draw_center(width / 2, footer_y, "인천광역시 서구 백범로 726", 11, PDF_FONT)
     draw_center(width / 2, footer_y - 22, "주식회사 삼양사", 12, PDF_FONT_BOLD)
     draw_center(width / 2, footer_y - 44, "식품안전팀장", 11, PDF_FONT)
