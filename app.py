@@ -87,7 +87,7 @@ def create_qr_zip_from_excel(
     excel_file,
     base_url: str = "https://cert-site.streamlit.app/~/+/?product=",
 ) -> tuple[io.BytesIO, pd.DataFrame]:
-    excel_df = pd.read_excel(excel_file)
+    excel_df = pd.read_excel(excel_file, engine="openpyxl")
     excel_df.columns = [str(col).strip() for col in excel_df.columns]
 
     required_columns = ["product_code"]
@@ -778,7 +778,7 @@ else:
 
         uploaded_excel = st.file_uploader(
             "QR 생성용 엑셀 업로드",
-            type=["xlsx", "xls"],
+            type=["xlsx"],
             key="qr_excel_uploader",
         )
 
